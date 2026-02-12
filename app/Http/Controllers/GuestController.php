@@ -11,6 +11,7 @@ use App\Models\MasterPertanyaan;
 use App\Models\MasterKeperluan;
 use App\Models\MasterProdiInstansi;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class GuestController extends Controller
@@ -97,46 +98,50 @@ class GuestController extends Controller
         return view('guest.form-survey', compact('kunjungan', 'pertanyaan'));
     }
 
-    public function storeSurvey(Request $request, $id) {
-        $request->validate([
-            'jawaban' => 'required|array|min:5',
-            'kritik_saran' => 'nullable'
+public function storeSurvey(Request $request, $id) {
+    $request->validate([
+        'jawaban' => 'required|array',
+        'kritik_saran' => 'nullable'
+    ]);
+
+    DB::beginTransaction();
+    try {
+        $today = now(); // Lebih simpel pakai helper Laravel
+
+        // 1. Simpan Header Survey
+        // Pastikan nama kolom di database kamu adalah 'saran'. 
+        // Kalau di migrasi namanya 'kritik_saran', ubah 'saran' di bawah jadi 'kritik_saran'
+        $survey = Survey::create([
+            'kunjungan_id' => $id,
+            'kritik_saran'        => $request->kritik_saran, 
+            'created_at'   => $today,
+            'updated_at'   => $today,
         ]);
 
-        DB::beginTransaction();
-        try {
-            $today = Carbon::now()->toDateString();
+        // 2. Ambil semua jawaban dan urutkan
+        // Kita ambil hanya nilainya saja secara urut
+        $jawaban = collect($request->jawaban)->values()->all();
 
-            // 1. Simpan Header Survey (Tabel Survey hanya untuk metadata & saran)
-            $survey = Survey::create([
-                'kunjungan_id' => $id,
-                'saran'        => $request->kritik_saran, // Sesuaikan kolom: 'saran' atau 'kritik_saran'
-                'created_at'   => $today,
-                'updated_at'   => $today,
-            ]);
+        // 3. Simpan ke DetailSurvey
+        // Pastikan $jawaban[0] adalah P1, dst.
+        DetailSurvey::create([
+            'survey_id' => $survey->id,
+            'p1' => $jawaban[0] ?? 0,
+            'p2' => $jawaban[1] ?? 0,
+            'p3' => $jawaban[2] ?? 0,
+            'p4' => $jawaban[3] ?? 0,
+            'p5' => $jawaban[4] ?? 0,
+            'created_at' => $today,
+            'updated_at' => $today,
+        ]);
 
-            // 2. Ambil nilai jawaban
-            // Pastikan di View, name inputnya adalah jawaban[1], jawaban[2], dst sesuai ID Pertanyaan
-            $v = array_values($request->jawaban); 
-
-            // 3. Simpan Detail Survey (Tabel yang berisi p1, p2, p3, p4, p5)
-            DetailSurvey::create([
-                'survey_id'  => $survey->id,
-                'p1'         => $v[0] ?? 0,
-                'p2'         => $v[1] ?? 0,
-                'p3'         => $v[2] ?? 0,
-                'p4'         => $v[3] ?? 0,
-                'p5'         => $v[4] ?? 0,
-                'created_at' => $today,
-                'updated_at' => $today,
-            ]);
-
-            DB::commit();
-            return redirect()->route('guest.landing')->with('success', 'Penilaian berhasil dikirim!');
-
-        } catch (\Exception $e) {
-            DB::rollback();
-            return back()->with('error', 'Gagal menyimpan survey: ' . $e->getMessage());
-        }
+        DB::commit();
+        return redirect()->route('guest.landing')->with('success', 'Terima kasih! Penilaian Anda telah kami terima.');
+    } catch (\Exception $e) {
+        DB::rollback();
+        // Log error untuk debug
+        Log::error($e->getMessage());
+        return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
     }
+}
 }

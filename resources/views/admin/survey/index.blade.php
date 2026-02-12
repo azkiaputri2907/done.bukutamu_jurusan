@@ -27,19 +27,24 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($surveys as $s)
-                                <tr>
-                                    <td>{{ \Carbon\Carbon::parse($s->created_at)->format('d/m/Y') }}</td>
-                                    <td>{{ $s->kunjungan->pengunjung->nama_lengkap ?? 'Anonim' }}</td>
-                                    <td><span class="badge bg-info text-dark">{{ $s->p1 }}</span></td>
-                                    <td><span class="badge bg-info text-dark">{{ $s->p2 }}</span></td>
-                                    <td><span class="badge bg-info text-dark">{{ $s->p3 }}</span></td>
-                                    <td><span class="badge bg-info text-dark">{{ $s->p4 }}</span></td>
-                                    <td><span class="badge bg-info text-dark">{{ $s->p5 }}</span></td>
-                                    <td><small class="text-muted">{{ Str::limit($s->saran, 30) ?: '-' }}</small></td>
-                                </tr>
-                                @endforeach
-                            </tbody>
+@foreach($surveys as $s)
+<tr>
+    <td>{{ \Carbon\Carbon::parse($s->created_at)->format('d/m/Y') }}</td>
+    <td>{{ $s->kunjungan->pengunjung->nama_lengkap ?? 'Anonim' }}</td>
+    
+    <td><span class="badge bg-info text-dark">{{ $s->detail->p1 ?? '-' }}</span></td>
+    <td><span class="badge bg-info text-dark">{{ $s->detail->p2 ?? '-' }}</span></td>
+    <td><span class="badge bg-info text-dark">{{ $s->detail->p3 ?? '-' }}</span></td>
+    <td><span class="badge bg-info text-dark">{{ $s->detail->p4 ?? '-' }}</span></td>
+    <td><span class="badge bg-info text-dark">{{ $s->detail->p5 ?? '-' }}</span></td>
+    
+    <td>
+        <small class="text-muted">
+            {{ $s->saran ?? ($s->kritik_saran ?? '-') }}
+        </small>
+    </td>
+</tr>
+@endforeach                            </tbody>
                         </table>
                     </div>
                     <div class="mt-3">

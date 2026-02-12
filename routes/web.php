@@ -46,6 +46,15 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/admin/kunjungan/{id}', [DashboardController::class, 'destroyKunjungan'])->name('admin.kunjungan.destroy');
 
     Route::get('/admin/survey', [DashboardController::class, 'survey'])->name('admin.survey');
+    Route::get('/admin/pengunjung', [DashboardController::class, 'pengunjung'])->name('admin.pengunjung');
+
+    // Master Data Keperluan
+    Route::get('/admin/master/keperluan', [DashboardController::class, 'masterKeperluan'])->name('admin.keperluan');
+    Route::post('/admin/master/keperluan', [DashboardController::class, 'storeKeperluan'])->name('admin.keperluan.store');
+
+    // Laporan
+    Route::get('/admin/laporan', [DashboardController::class, 'laporan'])->name('admin.laporan');
+    Route::post('/admin/laporan/export', [DashboardController::class, 'exportLaporan'])->name('admin.laporan.export');
     
     // Data User (Hanya Admin)
     Route::middleware(['role:Administrator'])->group(function () {

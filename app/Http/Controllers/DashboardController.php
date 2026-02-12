@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\MasterRole;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use App\Models\MasterKeperluan;
 
 class DashboardController extends Controller
 {
@@ -151,5 +152,59 @@ public function index()
 
     return view('admin.survey.index', compact('surveys', 'avgScores', 'aspekLabels'));
 }
+
+// --- DATA PENGUNJUNG ---
+public function pengunjung(Request $request)
+{
+    $query = Pengunjung::query();
+    if ($request->search) {
+        $query->where('nama_lengkap', 'like', '%'.$request->search.'%')
+              ->orWhere('identitas_no', 'like', '%'.$request->search.'%');
+    }
+    $pengunjung = $query->latest()->paginate(10);
+    return view('admin.pengunjung.index', compact('pengunjung'));
+}
+
+// --- MASTER KEPERLUAN ---
+public function masterKeperluan()
+{
+    $keperluan = MasterKeperluan::all();
+    return view('admin.master.keperluan', compact('keperluan'));
+}
+
+public function storeKeperluan(Request $request)
+{
+    $request->validate(['keterangan' => 'required']);
+    MasterKeperluan::create($request->all());
+    return back()->with('success', 'Keperluan berhasil ditambah.');
+}
+
+// --- LAPORAN ---
+public function laporan()
+{
+    return view('admin.laporan.index');
+}
+
+public function exportLaporan(Request $request)
+{
+    $request->validate([
+        'tgl_mulai' => 'required',
+        'tgl_selesai' => 'required',
+        'jenis' => 'required'
+    ]);
+
+    // Logika filter data untuk export
+    if($request->jenis == 'kunjungan') {
+        $data = Kunjungan::with('pengunjung')
+                ->whereBetween('tanggal', [$request->tgl_mulai, $request->tgl_selesai])->get();
+    } else {
+        $data = Survey::with(['kunjungan.pengunjung', 'detail'])
+                ->whereBetween('created_at', [$request->tgl_mulai, $request->tgl_selesai])->get();
+    }
+
+    // Untuk sementara kita tampilkan data mentah, nanti bisa pakai Excel/PDF
+    return $data; 
+}
+
 }
 

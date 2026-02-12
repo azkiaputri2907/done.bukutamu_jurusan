@@ -26,7 +26,8 @@
                                     <div class="d-flex justify-content-between">
                                         @for($i = 1; $i <= 5; $i++)
                                         <div class="form-check form-check-inline">
-<input type="radio" name="jawaban[{{ $q->id }}]" value="{{ $i }}" required>                                            <label class="form-check-label">{{ $i }}</label>
+                                            <input class="form-check-input" type="radio" name="jawaban[{{ $q->id }}]" value="{{ $i }}" required>
+                                            <label class="form-check-label">{{ $i }}</label>
                                         </div>
                                         @endfor
                                     </div>

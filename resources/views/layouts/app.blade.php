@@ -38,9 +38,19 @@
                         <a href="{{ route('admin.kunjungan') }}"><i class="fas fa-book me-2"></i> Data Kunjungan</a>
                     </li>
                     <li class="{{ request()->is('admin/survey*') ? 'active' : '' }}">
-    <a href="{{ route('admin.survey') }}"><i class="fas fa-poll me-2"></i> Data Survey</a>
-</li>
-                    
+                        <a href="{{ route('admin.survey') }}"><i class="fas fa-poll me-2"></i> Data Survey</a>
+                    </li>
+                    <li class="{{ request()->is('admin/pengunjung*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.pengunjung') }}"><i class="fas fa-user-friends me-2"></i> Data Pengunjung</a>
+                    </li>
+
+                    <li class="{{ request()->is('admin/master*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.keperluan') }}"><i class="fas fa-database me-2"></i> Master Keperluan</a>
+                    </li>
+
+                    <li class="{{ request()->is('admin/laporan*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.laporan') }}"><i class="fas fa-file-export me-2"></i> Laporan</a>
+                    </li>
                     @can('admin-only')
                     <hr>
                     <li class="{{ request()->is('admin/users*') ? 'active' : '' }}">

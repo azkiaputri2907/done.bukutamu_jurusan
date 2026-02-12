@@ -6,20 +6,18 @@ use Illuminate\Database\Eloquent\Model;
 
 class Survey extends Model
 {
-    protected $table = 'survey';
-    protected $fillable = ['kunjungan_id', 'kritik_saran'];
-// Tambahkan ini di dalam setiap class Model
-protected $dateFormat = 'Y-m-d';
+    protected $table = 'survey'; // Pastikan nama tabel benar
+    protected $fillable = ['kunjungan_id', 'saran', 'kritik_saran'];
 
-// Agar Laravel otomatis mengisi tanggal saat create
-public $timestamps = true;
+    // Relasi ke tabel detail_survey
     public function detail()
     {
-        return $this->hasMany(DetailSurvey::class, 'survey_id');
+        // 'survey_id' adalah kolom di tabel detail_survey yang nyambung ke id di tabel survey
+        return $this->hasOne(DetailSurvey::class, 'survey_id');
     }
 
     public function kunjungan()
     {
-        return $this->belongsTo(Kunjungan::class, 'kunjungan_id');
+        return $this->belongsTo(Kunjungan::class);
     }
 }
