@@ -24,6 +24,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('email')->unique();
             $table->string('password');
+            $table->string('foto')->nullable(); // <-- TAMBAHKAN BARIS INI
             $table->rememberToken();
             $table->date('created_at')->nullable();
             $table->date('updated_at')->nullable();

@@ -51,7 +51,7 @@
                             <label class="block text-sm font-semibold text-gray-700 mb-2">Nomor Kunjungan (Auto)</label>
                             <input type="text" value="C0-{{ date('Ymd') }}-XXX" readonly 
                                 class="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-200 text-gray-500 font-mono font-bold cursor-not-allowed focus:outline-none">
-                            <p class="text-xs text-blue-500 mt-1 italic">*Dihasilkan otomatis setelah simpan</p>
+                            <p class="text-xs text-blue-500 mt-1 italic">*Simpan nomor kunjungan ini</p>
                         </div>
 
                         <div>
@@ -171,78 +171,110 @@
 </div>
 
 <script>
-    // --- 1. MODAL LOGIC ---
-    const modal = document.getElementById('customModal');
-    const modalContent = document.getElementById('modalContent');
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // --- 1. MODAL LOGIC ---
+        const modal = document.getElementById('customModal');
+        const modalContent = document.getElementById('modalContent');
 
-    window.showModal = function(title, message, type = 'success') {
-        const iconBox = document.getElementById('modalIcon');
-        document.getElementById('modalTitle').innerText = title;
-        document.getElementById('modalMessage').innerText = message;
+        window.showModal = function(title, message, type = 'success') {
+            const iconBox = document.getElementById('modalIcon');
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalMessage').innerText = message;
 
-        if (type === 'success') {
-            iconBox.className = "mx-auto flex items-center justify-center h-16 w-16 rounded-full mb-4 bg-green-100 text-green-600";
-            iconBox.innerHTML = '<i class="fas fa-check text-3xl"></i>';
-        } else if (type === 'info') {
-            iconBox.className = "mx-auto flex items-center justify-center h-16 w-16 rounded-full mb-4 bg-blue-100 text-blue-600";
-            iconBox.innerHTML = '<i class="fas fa-info text-3xl"></i>';
-        } else {
-            iconBox.className = "mx-auto flex items-center justify-center h-16 w-16 rounded-full mb-4 bg-amber-100 text-amber-600";
-            iconBox.innerHTML = '<i class="fas fa-exclamation text-3xl"></i>';
-        }
+            if (type === 'success') {
+                iconBox.className = "mx-auto flex items-center justify-center h-16 w-16 rounded-full mb-4 bg-green-100 text-green-600";
+                iconBox.innerHTML = '<i class="fas fa-check text-3xl"></i>';
+            } else if (type === 'info') {
+                iconBox.className = "mx-auto flex items-center justify-center h-16 w-16 rounded-full mb-4 bg-blue-100 text-blue-600";
+                iconBox.innerHTML = '<i class="fas fa-info text-3xl"></i>';
+            } else {
+                iconBox.className = "mx-auto flex items-center justify-center h-16 w-16 rounded-full mb-4 bg-amber-100 text-amber-600";
+                iconBox.innerHTML = '<i class="fas fa-exclamation text-3xl"></i>';
+            }
 
-        modal.classList.remove('hidden');
-        setTimeout(() => {
-            modalContent.classList.remove('scale-95', 'opacity-0');
-            modalContent.classList.add('scale-100', 'opacity-100');
-        }, 10);
-    };
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modalContent.classList.remove('scale-95', 'opacity-0');
+                modalContent.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        };
 
-    window.closeModal = function() {
-        modalContent.classList.remove('scale-100', 'opacity-100');
-        modalContent.classList.add('scale-95', 'opacity-0');
-        setTimeout(() => modal.classList.add('hidden'), 300);
-    };
+        window.closeModal = function() {
+            modalContent.classList.remove('scale-100', 'opacity-100');
+            modalContent.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        };
 
-    // --- 2. CEK DATA LOGIC (FETCH API) ---
-    document.getElementById('btnCek').addEventListener('click', function() {
-        let noId = document.getElementById('identitas_no').value.trim();
-        if(noId === "") {
-            showModal('Peringatan', 'Harap masukkan nomor identitas (NIM/NIP) terlebih dahulu!', 'warning');
-            return;
-        }
+        // --- 2. AUTO DETECT PRODI SAAT MENGETIK ---
+        const inputIdentitas = document.getElementById('identitas_no');
+        const selectInstansi = document.getElementById('asal_instansi');
 
-        let btn = this;
-        let originalContent = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-        btn.disabled = true;
+        inputIdentitas.addEventListener('input', function(e) {
+            let value = this.value.trim().toUpperCase();
 
-        fetch(`{{ route('guest.check') }}?no_id=${noId}`)
-            .then(response => response.json())
-            .then(data => {
-                btn.innerHTML = originalContent;
-                btn.disabled = false;
+            if (value.startsWith('C01')) {
+                selectInstansi.value = 'D3 Teknik Listrik';
+            } else if (value.startsWith('C02')) {
+                selectInstansi.value = 'D3 Teknik Elektronika';
+            } else if (value.startsWith('C03')) {
+                selectInstansi.value = 'D3 Teknik Informatika';
+            } else if (value.startsWith('C04')) {
+                selectInstansi.value = 'D4 Teknologi Rekayasa Otomasi';
+            } else if (value.startsWith('C05')) {
+                selectInstansi.value = 'D4 Sistem Informasi Kota Cerdas';
+            } else if (value.startsWith('C06')) {
+                selectInstansi.value = 'D4 Teknologi Rekayasa Pembangkit Energi';
+            } else if (/^\d/.test(value)) { 
+                // Jika diawali angka (0-9)
+                selectInstansi.value = 'Lainnya / Instansi Luar';
+            }
+            // Jika dihapus/kosong, biarkan apa adanya atau user bisa ganti manual
+        });
 
-                if(data) {
-                    document.getElementById('nama_lengkap').value = data.nama_lengkap;
-                    // Pastikan value option sesuai dengan yang ada di database
-                    const selectInstansi = document.getElementById('asal_instansi');
-                    selectInstansi.value = data.asal_instansi;
-                    
-                    showModal('Berhasil!', `Data ditemukan. Halo, ${data.nama_lengkap}.`, 'success');
-                } else {
-                    showModal('Data Baru', 'Identitas tidak ditemukan di database kami. Silakan isi form secara manual.', 'info');
-                    document.getElementById('nama_lengkap').focus();
-                }
-            })
-            .catch(err => {
-                btn.innerHTML = originalContent;
-                btn.disabled = false;
-                showModal('Error', 'Terjadi kesalahan saat menghubungi server.', 'warning');
-            });
+        // --- 3. CEK DATA LOGIC (FETCH API) ---
+        document.getElementById('btnCek').addEventListener('click', function() {
+            let noId = inputIdentitas.value.trim();
+            if(noId === "") {
+                showModal('Peringatan', 'Harap masukkan nomor identitas (NIM/NIP) terlebih dahulu!', 'warning');
+                return;
+            }
+
+            let btn = this;
+            let originalContent = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            btn.disabled = true;
+
+            fetch(`{{ route('guest.check') }}?no_id=${noId}`)
+                .then(response => response.json())
+                .then(data => {
+                    btn.innerHTML = originalContent;
+                    btn.disabled = false;
+
+                    // PERBAIKAN: Cek apakah data benar-benar ada dan tidak undefined
+                    if(data && data.nama_lengkap) {
+                        document.getElementById('nama_lengkap').value = data.nama_lengkap;
+                        selectInstansi.value = data.asal_instansi;
+                        showModal('Berhasil!', `Data ditemukan. Halo, ${data.nama_lengkap}.`, 'success');
+                    } else {
+                        // Jika data tidak ditemukan, kosongkan nama (jangan tulis undefined)
+                        // dan JANGAN ubah pilihan dropdown prodi yang sudah terdeteksi otomatis
+                        document.getElementById('nama_lengkap').value = '';
+                        document.getElementById('nama_lengkap').focus();
+                        showModal('Pengunjung Baru', 'Identitas belum ada di sistem. Silakan isi nama secara manual.', 'info');
+                    }
+                })
+                .catch(err => {
+                    btn.innerHTML = originalContent;
+                    btn.disabled = false;
+                    showModal('Error', 'Terjadi kesalahan saat menghubungi server.', 'warning');
+                });
+        });
+
     });
 
-    // --- 3. TOGGLE KEPERLUAN LAINNYA ---
+    // --- 4. TOGGLE KEPERLUAN LAINNYA ---
+    // Dipindah ke luar DOMContentLoaded karena dipanggil langsung lewat HTML onchange=""
     function toggleKeperluanLainnya() {
         const selectKeperluan = document.getElementById('keperluan');
         const divLainnya = document.getElementById('input_keperluan_lainnya');

@@ -23,19 +23,21 @@ class DatabaseSeeder extends Seeder
         // Login Admin: admin@poliban.ac.id | admin123
         DB::table('master_user')->insert([
             'role_id' => 1,
-            'name' => 'Admin Elektro',
+            'name' => 'Admin Jurusan Teknik Elektro',
             'email' => 'admin@poliban.ac.id',
             'password' => Hash::make('admin123'),
+            'foto' => 'img/avatar_admin.jpg', // Mengarah ke public/img/avatar_admin.jpg
             'created_at' => now()->toDateString(),
             'updated_at' => now()->toDateString(),
         ]);
         
-        // Login Ketua: ketua@poliban.ac.id | ketua123
+        // Login Ketua
         DB::table('master_user')->insert([
             'role_id' => 2,
-            'name' => 'Ketua Jurusan Elektro',
+            'name' => 'Bpk. M.Helmy Noor, S.ST., M.T.',
             'email' => 'ketua@poliban.ac.id',
             'password' => Hash::make('ketua123'),
+            'foto' => 'img/kajur.png', // Mengarah ke public/img/kajur.png
             'created_at' => now()->toDateString(),
             'updated_at' => now()->toDateString(),
         ]);

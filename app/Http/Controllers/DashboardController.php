@@ -240,28 +240,55 @@ public function masterKeperluan()
 // --- LAPORAN ---
 public function laporan()
 {
-    return view('admin.laporan.index');
+    $prodi = \App\Models\MasterProdiInstansi::all(); 
+    
+    return view('admin.laporan.index', compact('prodi'));
 }
 
 public function exportLaporan(Request $request)
 {
     $request->validate([
-        'tgl_mulai' => 'required',
-        'tgl_selesai' => 'required',
-        'jenis' => 'required'
+        'tgl_mulai'   => 'required|date',
+        'tgl_selesai' => 'required|date',
+        'jenis'       => 'required',
+        'prodi_id'    => 'required'
     ]);
 
-    // Logika filter data untuk export
-    if($request->jenis == 'kunjungan') {
+    $start = $request->tgl_mulai;
+    $end   = $request->tgl_selesai;
+    $prodi = $request->prodi_id;
+
+    if ($request->jenis == 'kunjungan') {
         $data = Kunjungan::with('pengunjung')
-                ->whereBetween('tanggal', [$request->tgl_mulai, $request->tgl_selesai])->get();
+            ->whereBetween('tanggal', [$start, $end])
+            ->when($prodi !== 'all', function ($query) use ($prodi) {
+                // Filter berdasarkan nama prodi/instansi di tabel pengunjung
+                return $query->whereHas('pengunjung', function ($q) use ($prodi) {
+                    $q->where('asal_instansi', $prodi);
+                });
+            })
+            ->get();
+
+    } elseif ($request->jenis == 'pengunjung') {
+        $data = Pengunjung::whereBetween('created_at', [$start, $end])
+            ->when($prodi !== 'all', function ($query) use ($prodi) {
+                return $query->where('asal_instansi', $prodi);
+            })
+            ->get();
+
     } else {
-        $data = Survey::with(['kunjungan.pengunjung', 'detail'])
-                ->whereBetween('created_at', [$request->tgl_mulai, $request->tgl_selesai])->get();
+        // Jenis: Survey
+        $data = Survey::with(['detail', 'kunjungan.pengunjung'])
+            ->whereBetween('created_at', [$start, $end])
+            ->when($prodi !== 'all', function ($query) use ($prodi) {
+                return $query->whereHas('kunjungan.pengunjung', function ($q) use ($prodi) {
+                    $q->where('asal_instansi', $prodi);
+                });
+            })
+            ->get();
     }
 
-    // Untuk sementara kita tampilkan data mentah, nanti bisa pakai Excel/PDF
-    return $data; 
+    return $data; // Lanjutkan ke proses download Excel/PDF
 }
 
 public function updateSurvey(Request $request, $id)

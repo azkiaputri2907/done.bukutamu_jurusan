@@ -87,12 +87,13 @@
                     </td>
 
                     <td class="px-6 py-4">
-                        <span class="text-xs text-gray-400 flex items-center gap-1">
-                            <i class="far fa-clock"></i>
-                            {{ \Carbon\Carbon::parse($p->updated_at)->diffForHumans() }}
-                        </span>
+                        <div class="flex flex-col">
+                            <span class="text-sm font-medium text-gray-700">
+                                {{ \Carbon\Carbon::parse($p->updated_at)->isoFormat('D MMMM Y') }}
+                            </span>
+                        </div>
                     </td>
-
+                    
                     <td class="px-6 py-4">
                         <div class="flex justify-center items-center gap-2">
                             {{-- Button Lihat --}}

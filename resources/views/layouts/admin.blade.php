@@ -12,6 +12,10 @@
     
     {{-- CSS Libraries --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/id.js"></script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -28,9 +32,14 @@
 
         /* Flatpickr Customization */
         .flatpickr-calendar {
-            border-radius: 1.5rem !important;
-            border: none !important;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+            margin-top: 8px !important;
+            border-radius: 16px !important;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+            border: 1px solid #f1f5f9 !important;
+        }
+        /* Memastikan dropdown bulan muncul di atas */
+        .flatpickr-innerContainer {
+            z-index: 999;
         }
         .flatpickr-day.selected {
             background: linear-gradient(135deg, #ff3366, #a044ff) !important;
@@ -54,8 +63,18 @@
 
             {{-- User Profile Badge in Sidebar --}}
             <div class="mx-6 p-4 bg-white/10 rounded-2xl flex items-center gap-3 mb-6 border border-white/5 backdrop-blur-sm">
-                <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center shrink-0 border border-white/10">
-                    <span class="font-bold text-lg">{{ substr(Auth::user()->name, 0, 1) }}</span>
+                <div class="shrink-0">
+                    @if(Auth::user()->foto)
+                        {{-- Menampilkan Foto Asli (kajur.png atau avatar_admin.jpg) --}}
+                        <img src="{{ asset(Auth::user()->foto) }}" 
+                            alt="Profile" 
+                            class="w-12 h-12 rounded-xl object-cover border-2 border-white/20 shadow-sm">
+                    @else
+                        {{-- Fallback Inisial jika foto tidak ada --}}
+                        <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center border border-white/10">
+                            <span class="font-bold text-xl">{{ substr(Auth::user()->name, 0, 1) }}</span>
+                        </div>
+                    @endif
                 </div>
                 <div class="truncate">
                     <p class="text-sm font-bold truncate">{{ Auth::user()->name }}</p>

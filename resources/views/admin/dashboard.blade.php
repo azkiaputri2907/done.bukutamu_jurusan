@@ -22,13 +22,17 @@
     </div>
 
     {{-- Date Display --}}
-    <div class="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl shadow-sm border border-gray-100 cursor-default">
-        <div class="text-right hidden sm:block">
-            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Hari Ini</p>
-            <p class="text-sm font-bold text-gray-700">{{ \Carbon\Carbon::now()->isoFormat('dddd, D MMMM Y') }}</p>
-        </div>
-        <div class="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center text-[#a044ff]">
-            <i class="far fa-calendar-alt text-lg"></i>
+    <div class="relative">
+        <div id="calendar-trigger" class="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl shadow-sm border border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors duration-200">
+            <div class="text-right hidden sm:block">
+                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Hari Ini</p>
+                <p class="text-sm font-bold text-gray-700">{{ \Carbon\Carbon::now()->isoFormat('dddd, D MMMM Y') }}</p>
+            </div>
+            <div class="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center text-[#a044ff]">
+                <i class="far fa-calendar-alt text-lg"></i>
+            </div>
+            {{-- Hapus input manual yang pakai inline style tadi, ganti dengan ini saja --}}
+            <input type="text" id="datepicker" class="absolute inset-0 opacity-0 cursor-pointer">
         </div>
     </div>
 </div>
@@ -117,6 +121,32 @@
 
 {{-- CHART SCRIPTS --}}
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        flatpickr("#datepicker", {
+            locale: "id",
+            dateFormat: "Y-m-d",
+            defaultDate: "today",
+            // altInput dimatikan agar tidak muncul 2 input
+            altInput: false, 
+            // Agar bulan & tahun tetap bisa diklik (dropdown)
+            monthSelectorType: "dropdown", 
+            // Mengunci posisi kalender ke kotak trigger
+            positionElement: document.getElementById('calendar-trigger'),
+            position: "below right", 
+            onChange: function(selectedDates, dateStr, instance) {
+                console.log("Tanggal dipilih: " + dateStr);
+                // window.location.href = "?date=" + dateStr;
+            }
+        });
+        
+
+        // Trigger tetap sama
+        document.getElementById('calendar-trigger').addEventListener('click', function() {
+            document.getElementById('datepicker')._flatpickr.open();
+        });
+    });
+
+
     document.addEventListener('DOMContentLoaded', function() {
         Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
         Chart.defaults.color = '#94a3b8';

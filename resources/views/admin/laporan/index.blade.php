@@ -32,49 +32,65 @@
                 
                 <div class="space-y-6">
                     
-                    {{-- Row: Jenis Laporan & Format --}}
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {{-- Input Jenis Laporan --}}
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">Jenis Data</label>
-                            <select name="jenis" required 
-                                    class="w-full bg-gray-50 border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold text-gray-700 outline-none focus:ring-2 focus:ring-[#a044ff] focus:bg-white transition">
-                                <option value="kunjungan">📊 Data Kunjungan Tamu</option>
-                                <option value="survey">⭐️ Data Survey Kepuasan</option>
-                            </select>
-                        </div>
+                {{-- Row: Jenis Laporan & Filter Prodi --}}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    {{-- Input Jenis Laporan --}}
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">Jenis Data</label>
+                        <select name="jenis" required 
+                                class="w-full bg-gray-50 border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold text-gray-700 outline-none focus:ring-2 focus:ring-[#a044ff] focus:bg-white transition">
+                            <option value="kunjungan">📊 Data Kunjungan Tamu</option>
+                            <option value="pengunjung">👤 Data Pengunjung</option>
+                            <option value="survey">⭐️ Data Survey & Detail Kepuasan</option>
+                        </select>
+                    </div>
 
-                        {{-- Input Format File --}}
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">Format File</label>
-                            <select name="format" required 
-                                    class="w-full bg-gray-50 border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold text-gray-700 outline-none focus:ring-2 focus:ring-red-400 focus:bg-white transition">
-                                <option value="excel">🟢 Microsoft Excel (.xlsx)</option>
-                                <option value="pdf">🔴 Dokumen PDF (.pdf)</option>
+                {{-- Input Filter Prodi --}}
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">Filter Program Studi / Instansi</label>
+                        <div class="relative">
+                            {{-- Ikon dihapus, padding pl-10 diubah ke px-4 --}}
+                            <select name="prodi_id" required
+                                    class="w-full px-4 py-3 bg-gray-50 border-gray-200 rounded-xl text-sm font-semibold text-gray-700 outline-none focus:ring-2 focus:ring-[#a044ff] focus:bg-white transition">
+                                <option value="all">🌐 Semua Program Studi / Instansi</option>
+                                @foreach($prodi as $p)
+                                    <option value="{{ $p->nama }}">{{ $p->jenis == 'Prodi' ? '🎓' : '🏢' }} {{ $p->nama }}</option>
+                                @endforeach
                             </select>
                         </div>
                     </div>
+                </div>
 
-                    {{-- Row: Baris Tanggal --}}
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">Dari Tanggal</label>
-                            <div class="relative">
-                                <i class="far fa-calendar absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
-                                <input type="date" name="tgl_mulai" required 
-                                       class="w-full pl-10 pr-4 py-3 bg-gray-50 border-gray-200 rounded-xl text-sm font-medium text-gray-700 focus:ring-2 focus:ring-[#a044ff] focus:bg-white transition">
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">Sampai Tanggal</label>
-                            <div class="relative">
-                                <i class="far fa-calendar absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
-                                <input type="date" name="tgl_selesai" required 
-                                       class="w-full pl-10 pr-4 py-3 bg-gray-50 border-gray-200 rounded-xl text-sm font-medium text-gray-700 focus:ring-2 focus:ring-[#a044ff] focus:bg-white transition">
-                            </div>
+                {{-- Row: Format File (Dibuat Full Width) --}}
+                <div class="mb-4">
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">Format File</label>
+                    <select name="format" required 
+                            class="w-full bg-gray-50 border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold text-gray-700 outline-none focus:ring-2 focus:ring-red-400 focus:bg-white transition">
+                        <option value="excel">🟢 Microsoft Excel (.xlsx)</option>
+                        <option value="pdf">🔴 Dokumen PDF (.pdf)</option>
+                    </select>
+                </div>
+
+                {{-- Row: Baris Tanggal --}}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {{-- Dari Tanggal --}}
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">🗓️ Dari Tanggal</label>
+                        <div class="relative">
+                            <input type="date" name="tgl_mulai" required 
+                                class="w-full px-4 py-3 bg-gray-50 border-gray-200 rounded-xl text-sm font-medium text-gray-700 focus:ring-2 focus:ring-[#a044ff] focus:bg-white transition">
                         </div>
                     </div>
 
+                    {{-- Sampai Tanggal --}}
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">⌛ Sampai Tanggal</label>
+                        <div class="relative">
+                            <input type="date" name="tgl_selesai" required 
+                                class="w-full px-4 py-3 bg-gray-50 border-gray-200 rounded-xl text-sm font-medium text-gray-700 focus:ring-2 focus:ring-[#a044ff] focus:bg-white transition">
+                        </div>
+                    </div>
+                </div>
                     {{-- Tombol Submit --}}
                     <div class="pt-2">
                         <button type="submit" 

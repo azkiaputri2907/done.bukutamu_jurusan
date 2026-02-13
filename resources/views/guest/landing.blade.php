@@ -93,7 +93,7 @@
                             </span>
                         </h2>
                         <p class="text-gray-600 leading-relaxed text-base sm:text-lg mt-4 text-justify sm:text-left max-w-3xl">
-                            Jurusan Teknik Elektro berkomitmen untuk mengadopsi teknologi digital dalam setiap aspek pelayanan untuk efisiensi, kecepatan, dan transparansi data.
+                            Jurusan Teknik Elektro berkomitmen untuk mengadopsi teknologi digital dalam setiap aspek pelayanan. Buku Tamu Digital adalah implementasi nyata dari visi modernisasi administrasi yang efisien dan berkelanjutan.
                         </p>
                     </div>
                     
@@ -181,7 +181,7 @@
                         ['name' => 'Khairunnisa, S.T., M.T.', 'prodi' => 'D3 Teknik Elektronika', 'img' => 'kaprodi2.png'],
                         ['name' => 'Fuad Sholihin, S.T., M.Kom.', 'prodi' => 'D3 Teknik Informatika', 'img' => 'kaprodi3.png'],
                         ['name' => 'Zuraidah, S.T., M.T.', 'prodi' => 'D4 Tek. Rek. Pembangkit Energi', 'img' => 'kaprodi4.png'],
-                        ['name' => 'Subandi, S.T., M.Kom.', 'prodi' => 'D4 Sistem Informasi Kota Cerdas', 'img' => 'kaprodi5.png']
+                        ['name' => 'Dr. Kun Nursyaiful Priyo Pamungkas, S.Kom., M.Kom.', 'prodi' => 'D4 Sistem Informasi Kota Cerdas', 'img' => 'kaprodi5.png']
                     ];
                 @endphp
 
@@ -214,7 +214,7 @@
                         <img src="{{ asset('img/logo_poliban.png') }}" alt="Logo Poliban" class="w-full h-full object-contain">
                     </div>
                     <div>
-                        <h4 class="text-white font-bold text-xl leading-none mb-1">Teknik Elektro</h4>
+                        <h4 class="text-white font-bold text-xl leading-none mb-1">Jurusan Teknik Elektro</h4>
                         <p class="text-xs uppercase tracking-wider text-blue-400 font-semibold">Politeknik Negeri Banjarmasin</p>
                     </div>
                 </div>

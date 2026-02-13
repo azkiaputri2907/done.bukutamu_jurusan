@@ -10,7 +10,7 @@ class MasterUser extends Authenticatable
     use Notifiable;
 
     protected $table = 'master_user';
-    protected $fillable = ['role_id', 'name', 'email', 'password'];
+    protected $fillable = ['role_id', 'name', 'email', 'password', 'foto']; // Tambahkan 'foto'
     protected $hidden = ['password', 'remember_token'];
 
     public function role()
