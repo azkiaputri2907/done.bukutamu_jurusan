@@ -3,41 +3,103 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Pengunjung;
-use App\Models\Kunjungan;
-use App\Models\Survey;
-use App\Models\DetailSurvey;
-use App\Models\MasterPertanyaan;
-use App\Models\MasterKeperluan;
-use App\Models\MasterProdiInstansi;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http; 
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class GuestController extends Controller
 {
-    public function index() {
-        // MENGAMBIL DATA REAL UNTUK LANDING PAGE
-        $totalPengunjung = Pengunjung::count();
-        $totalKunjungan = Kunjungan::count();
-        
-        // Menghitung rata-rata dari semua kolom P1-P5 di DetailSurvey
-        $avgScore = DetailSurvey::selectRaw('(AVG(p1)+AVG(p2)+AVG(p3)+AVG(p4)+AVG(p5))/5 as rata_rata')->first();
-        $rataRataSurvey = $avgScore->rata_rata ?? 0;
+    // ==========================================
+    // 1. LANDING PAGE (Ambil Ringkasan Statistik)
+    // ==========================================
+public function index() {
+    $totalPengunjung = 0;
+    $totalKunjungan = 0;
+    $rataRataSurvey = 0;
 
-        return view('guest.landing', compact('totalPengunjung', 'totalKunjungan', 'rataRataSurvey'));
+    try {
+        $scriptUrl = env('GOOGLE_SCRIPT_URL');
+        // Tambahkan timeout yang lebih lama (10 detik) jika koneksi lambat
+        $response = Http::timeout(10)->get($scriptUrl);
+        
+        if ($response->successful()) {
+            $result = $response->json();
+            if (isset($result['status']) && $result['status'] == 'success') {
+                $totalPengunjung = $result['data']['totalPengunjung'];
+                $totalKunjungan  = $result['data']['totalKunjungan'];
+                $rataRataSurvey  = $result['data']['rataRataSurvey'];
+            }
+        }
+    } catch (\Exception $e) {
+        Log::error('Gagal mengambil statistik: ' . $e->getMessage());
+        // Data tetap 0 agar halaman tidak crash
     }
 
+    return view('guest.landing', compact('totalPengunjung', 'totalKunjungan', 'rataRataSurvey'));
+}
+
+    // ==========================================
+    // 2. FORM KUNJUNGAN
+    // ==========================================
     public function formKunjungan() {
-        $keperluan_master = MasterKeperluan::all();
-        $master_prodi = MasterProdiInstansi::all();
+    // AMBIL DARI GOOGLE SHEETS
+        $keperluan_master = $this->fetchSheetsData('master_keperluan');
+
+        // Jika Sheets kosong/error, sediakan fallback (pilihan darurat)
+        if (empty($keperluan_master)) {
+            $keperluan_master = [
+                (object)['keterangan' => 'Urusan Umum'],
+                (object)['keterangan' => 'Lainnya'],
+            ];
+        }
+
+        $master_prodi = [
+            (object)['nama' => 'D3 Teknik Listrik', 'jenis' => 'Prodi'],
+            (object)['nama' => 'D3 Teknik Elektronika', 'jenis' => 'Prodi'],
+            (object)['nama' => 'D3 Teknik Informatika', 'jenis' => 'Prodi'],
+            (object)['nama' => 'D4 Teknologi Rekayasa Pembangkit Energi', 'jenis' => 'Prodi'],
+            (object)['nama' => 'D4 Sistem Informasi Kota Cerdas', 'jenis' => 'Prodi'],
+            (object)['nama' => 'Lainnya (Umum/Tamu Luar)', 'jenis' => 'Umum']
+        ];
+
         return view('guest.form-kunjungan', compact('keperluan_master', 'master_prodi'));
     }
 
-    public function checkVisitor(Request $request) {
-        $pengunjung = Pengunjung::where('identitas_no', $request->no_id)->first();
-        return response()->json($pengunjung);
+// ==========================================
+    // PERBAIKAN: CEK DATA LANGSUNG KE GOOGLE SHEETS
+    // ==========================================
+public function check(Request $request)
+{
+    try {
+        $scriptUrl = env('GOOGLE_SCRIPT_URL');
+        
+        // Tambahkan withOptions untuk mengikuti redirect dan tanpa verifikasi SSL jika perlu
+        $response = Http::timeout(15)
+            ->withOptions([
+                'allow_redirects' => true,
+                'verify' => false, 
+            ])
+            ->get($scriptUrl, [
+                'action' => 'searchPengunjung',
+                'no_id'  => $request->no_id
+            ]);
+
+        if ($response->successful()) {
+            $result = $response->json();
+            if (isset($result['status']) && $result['status'] == 'success') {
+                return response()->json([
+                    'status' => 'success',
+                    'data'   => $result['data']
+                ]);
+            }
+        }
+    } catch (\Exception $e) {
+        Log::error('Gagal cek data ke Sheets: ' . $e->getMessage());
+        return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
     }
+
+    return response()->json(['status' => 'not_found', 'data' => null]);
+}
 
     public function storeKunjungan(Request $request) {
         $request->validate([
@@ -47,109 +109,158 @@ class GuestController extends Controller
             'keperluan'    => 'required', 
         ]);
 
-        // Filter keperluan jika memilih 'Lainnya'
-        $keperluanFinal = $request->keperluan;
-        if ($request->keperluan === 'Lainnya') {
-            $keperluanFinal = $request->keperluan_lainnya;
-        }
+        $keperluanFinal = $request->keperluan === 'Lainnya' ? $request->keperluan_lainnya : $request->keperluan;
+        $today = date('Y-m-d');
+        $hari = Carbon::now()->locale('id')->isoFormat('dddd');
+        $detikUnik = str_pad(time() % 1000, 3, '0', STR_PAD_LEFT);
+        $nomorKunjungan = 'C0-' . date('Ymd') . '-' . $detikUnik; 
 
-        DB::beginTransaction();
         try {
-            $today = Carbon::now()->toDateString();
-            $dateCode = Carbon::now()->format('Ymd');
+            $scriptUrl = env('GOOGLE_SCRIPT_URL'); 
 
-            // 1. Simpan/Update data Pengunjung
-            $pengunjung = Pengunjung::updateOrCreate(
-                ['identitas_no' => $request->identitas_no],
-                [
-                    'nama_lengkap' => $request->nama_lengkap,
-                    'asal_instansi' => $request->asal_instansi,
-                    'updated_at' => $today
+            // Simpan ke sheet 'bukutamu'
+            Http::timeout(10)->post($scriptUrl, [
+                'action'    => 'append',
+                'sheetName' => 'bukutamu',
+                'data'      => [$nomorKunjungan, $today, $hari, $request->nama_lengkap, $request->asal_instansi, $keperluanFinal, $request->detail_keperluan ?? '-']
+            ]);
+
+            // Simpan/Update ke sheet 'pengunjung'
+            // Gunakan action 'upsertPengunjung' agar tidak double datanya di sheet
+            Http::timeout(10)->post($scriptUrl, [
+                'action'    => 'upsertPengunjung',
+                'data'      => [
+                    $request->identitas_no, 
+                    $request->nama_lengkap, 
+                    $request->asal_instansi, 
+                    $today
                 ]
-            );
-
-            // 2. Simpan Kunjungan
-            $kunjungan = Kunjungan::create([
-                'pengunjung_id'    => $pengunjung->id,
-                'keperluan'        => $keperluanFinal,
-                'detail_keperluan' => $request->detail_keperluan,
-                'hari_kunjungan'   => Carbon::now()->locale('id')->isoFormat('dddd'),
-                'tanggal'          => $today,
-                'nomor_kunjungan'  => 'TEMP-' . microtime(true),
-                'created_at'       => $today,
-                'updated_at'       => $today,
             ]);
 
-            // 3. Update nomor kunjungan format C0-YYYYMMDD-00X
-            $kunjungan->update([
-                'nomor_kunjungan' => 'C0-' . $dateCode . '-' . str_pad($kunjungan->id, 3, '0', STR_PAD_LEFT)
-            ]);
+            $dataKunjungan = [
+                'hari_kunjungan' => $hari,
+                'tanggal'        => $today,
+                'keperluan'      => $keperluanFinal,
+                'nama_lengkap'   => $request->nama_lengkap,
+                'identitas_no'   => $request->identitas_no,
+                'asal_instansi'  => $request->asal_instansi,
+            ];
 
-            DB::commit();
-            return redirect()->route('guest.konfirmasi', $kunjungan->id);
+            return redirect()->route('guest.konfirmasi', ['id' => $nomorKunjungan])
+                             ->with('kunjungan_data', $dataKunjungan)
+                             ->with('nama_tamu', $request->nama_lengkap);
 
         } catch (\Exception $e) {
-            DB::rollback();
-            return back()->with('error', 'Gagal: ' . $e->getMessage());
+            return back()->with('error', 'Gagal simpan data.');
         }
     }
 
     public function halamanKonfirmasi($id) {
-        $kunjungan = Kunjungan::with('pengunjung')->findOrFail($id);
+        $data = session('kunjungan_data');
+
+        // Mapping objek agar Blade tidak error
+        $kunjungan = (object)[
+            'id' => $id,
+            'nomor_kunjungan' => $id,
+            'hari_kunjungan' => $data['hari_kunjungan'] ?? Carbon::now()->locale('id')->isoFormat('dddd'),
+            'tanggal' => $data['tanggal'] ?? date('Y-m-d'),
+            'keperluan' => $data['keperluan'] ?? '-',
+            'pengunjung' => (object)[
+                'nama_lengkap' => $data['nama_lengkap'] ?? session('nama_tamu', 'Tamu'),
+                'identitas_no' => $data['identitas_no'] ?? '-',
+                'asal_instansi' => $data['asal_instansi'] ?? '-',
+            ]
+        ];
+
         return view('guest.konfirmasi', compact('kunjungan'));
     }
 
+    // ==========================================
+    // 4. FORM SURVEY
+    // ==========================================
     public function formSurvey($id) {
-        $kunjungan = Kunjungan::findOrFail($id);
-        // Mengelompokkan pertanyaan berdasarkan aspek agar tampilan di View rapi
-        $pertanyaan = MasterPertanyaan::with('aspek')->get()->groupBy('aspek.nama_aspek');
-        return view('guest.form-survey', compact('kunjungan', 'pertanyaan'));
+        $nama_tamu = session('nama_tamu', 'Tamu');
+
+        $pertanyaan = [
+            'Kecepatan Pelayanan' => [(object)['id' => 1, 'pertanyaan' => 'Bagaimana kecepatan petugas dalam memberikan pelayanan?']],
+            'Sikap Petugas'       => [(object)['id' => 2, 'pertanyaan' => 'Bagaimana keramahan dan kesopanan petugas saat melayani?']],
+            'Kualitas Informasi'  => [(object)['id' => 3, 'pertanyaan' => 'Apakah petugas memberikan informasi atau solusi yang jelas?']],
+            'Sarana & Prasarana'  => [(object)['id' => 4, 'pertanyaan' => 'Bagaimana kenyamanan dan kebersihan fasilitas pelayanan?']],
+            'Kepuasan Umum'       => [(object)['id' => 5, 'pertanyaan' => 'Seberapa puas Anda dengan pelayanan kami secara keseluruhan?']],
+        ];
+
+        $kunjungan = (object)['id' => $id];
+
+        return view('guest.form-survey', compact('pertanyaan', 'kunjungan', 'nama_tamu'));
     }
 
-public function storeSurvey(Request $request, $id) {
-    $request->validate([
-        'jawaban' => 'required|array',
-        'kritik_saran' => 'nullable'
-    ]);
-
-    DB::beginTransaction();
-    try {
-        $today = now(); // Lebih simpel pakai helper Laravel
-
-        // 1. Simpan Header Survey
-        // Pastikan nama kolom di database kamu adalah 'saran'. 
-        // Kalau di migrasi namanya 'kritik_saran', ubah 'saran' di bawah jadi 'kritik_saran'
-        $survey = Survey::create([
-            'kunjungan_id' => $id,
-            'kritik_saran'        => $request->kritik_saran, 
-            'created_at'   => $today,
-            'updated_at'   => $today,
+    // ==========================================
+    // 5. SUBMIT SURVEY (SIMPAN KE SHEET 'survey')
+    // ==========================================
+    public function storeSurvey(Request $request, $id) {
+        $request->validate([
+            'jawaban' => 'required|array',
+            'kritik_saran' => 'nullable'
         ]);
 
-        // 2. Ambil semua jawaban dan urutkan
-        // Kita ambil hanya nilainya saja secara urut
-        $jawaban = collect($request->jawaban)->values()->all();
+        try {
+            $jawaban = collect($request->jawaban)->values()->all();
+            $nama_tamu = $request->input('nama_tamu', 'Anonim');
+            $scriptUrl = env('GOOGLE_SCRIPT_URL'); 
 
-        // 3. Simpan ke DetailSurvey
-        // Pastikan $jawaban[0] adalah P1, dst.
-        DetailSurvey::create([
-            'survey_id' => $survey->id,
-            'p1' => $jawaban[0] ?? 0,
-            'p2' => $jawaban[1] ?? 0,
-            'p3' => $jawaban[2] ?? 0,
-            'p4' => $jawaban[3] ?? 0,
-            'p5' => $jawaban[4] ?? 0,
-            'created_at' => $today,
-            'updated_at' => $today,
-        ]);
+            Http::timeout(10)->post($scriptUrl, [
+                'action'    => 'append',
+                'sheetName' => 'survey',
+                'data'      => [
+                    date('Y-m-d H:i:s'), // Waktu Isi
+                    $id,                 // ID Kunjungan (Ref)
+                    $nama_tamu,          // Nama Pengunjung
+                    $jawaban[0] ?? 0,    // P1
+                    $jawaban[1] ?? 0,    // P2
+                    $jawaban[2] ?? 0,    // P3
+                    $jawaban[3] ?? 0,    // P4
+                    $jawaban[4] ?? 0,    // P5
+                    $request->kritik_saran ?? '-'
+                ]
+            ]);
 
-        DB::commit();
-        return redirect()->route('guest.landing')->with('success', 'Terima kasih! Penilaian Anda telah kami terima.');
-    } catch (\Exception $e) {
-        DB::rollback();
-        // Log error untuk debug
-        Log::error($e->getMessage());
-        return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            return redirect()->route('guest.index')->with('success', 'Terima kasih! Penilaian Anda sangat berarti bagi kami.');
+            
+        } catch (\Exception $e) {
+            Log::error('Survey Error: ' . $e->getMessage());
+            return redirect()->route('guest.index')->with('error', 'Penilaian gagal dikirim ke server.');
+        }
     }
-}
+
+        private function fetchSheetsData($sheetName = 'master_keperluan')
+    {
+        try {
+            $scriptUrl = env('GOOGLE_SCRIPT_URL');
+            // Memanggil action 'read' yang sudah kita buat di Apps Script sebelumnya
+            $response = Http::timeout(10)->get($scriptUrl, [
+                'action' => 'read',
+                'sheet'  => $sheetName
+            ]);
+
+            if ($response->successful()) {
+                $json = $response->json();
+                $rows = $json['data'] ?? [];
+                $result = [];
+
+                foreach ($rows as $index => $row) {
+                    // Lewati header (index 0) dan baris kosong
+                    if ($index === 0 || empty($row[0])) continue;
+
+                    $result[] = (object) [
+                        'id' => $row[0],
+                        'keterangan' => $row[1] ?? '-'
+                    ];
+                }
+                return $result;
+            }
+        } catch (\Exception $e) {
+            Log::error("Gagal fetch $sheetName: " . $e->getMessage());
+        }
+        return [];
+    }
 }

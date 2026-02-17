@@ -70,7 +70,7 @@
 
                     {{-- Item 3: Identitas --}}
                     <div class="flex items-center p-4 bg-gray-50/80 rounded-xl border border-gray-100">
-                        <div class="mr-4 text-blue-500"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5"></path></svg></div>
+                        <div class="mr-4 text-blue-500"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2-2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5"></path></svg></div>
                         <div>
                             <p class="text-[10px] text-gray-400 uppercase font-black">Identitas (NIM/NIP)</p>
                             {{-- Variabel Code 1 --}}

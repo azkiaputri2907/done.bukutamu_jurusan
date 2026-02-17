@@ -15,7 +15,7 @@
     @can('admin-only')
     <div class="hidden md:flex items-center gap-2 bg-blue-50 text-blue-600 px-4 py-2 rounded-xl text-xs font-bold border border-blue-100">
         <i class="fas fa-users"></i>
-        <span>Total: {{ $pengunjung->total() }} Orang</span>
+        <span>Total: {{ $pengunjung->count() }} Orang</span>
     </div>
     @endcan
 </div>
@@ -66,8 +66,9 @@
             <tbody class="divide-y divide-gray-50">
                 @forelse($pengunjung as $p)
                 <tr class="hover:bg-gray-50/80 transition duration-150" x-data="{ editModalOpen: false, detailModalOpen: false }">
+                    {{-- FIX 1: Gunakan loop iteration biasa --}}
                     <td class="px-6 py-4 text-sm font-medium text-gray-400">
-                        {{ ($pengunjung->currentPage() - 1) * $pengunjung->perPage() + $loop->iteration }}
+                        {{ $loop->iteration }}
                     </td>
 
                     <td class="px-6 py-4">
@@ -88,8 +89,11 @@
 
                     <td class="px-6 py-4">
                         <div class="flex flex-col">
+                            {{-- FIX 3: Gunakan variabel terakhir_kunjungan --}}
                             <span class="text-sm font-medium text-gray-700">
-                                {{ \Carbon\Carbon::parse($p->updated_at)->isoFormat('D MMMM Y') }}
+                                {{ $p->terakhir_kunjungan && $p->terakhir_kunjungan != '-' 
+                                    ? \Carbon\Carbon::parse($p->terakhir_kunjungan)->isoFormat('D MMMM Y') 
+                                    : 'Belum Ada Data' }}
                             </span>
                         </div>
                     </td>
@@ -100,16 +104,18 @@
                             <button @click="detailModalOpen = true" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 hover:scale-110 transition flex items-center justify-center shadow-sm" title="Lihat Detail">
                                 <i class="fas fa-eye text-xs"></i>
                             </button>
+
                         @can('admin-only')
                             {{-- Button Edit --}}
-                            <button @click="editModalOpen = true" class="w-8 h-8 rounded-lg bg-yellow-50 text-yellow-600 hover:bg-yellow-100 hover:scale-110 transition flex items-center justify-center shadow-sm" title="Edit">
+                            {{-- <button @click="editModalOpen = true" class="w-8 h-8 rounded-lg bg-yellow-50 text-yellow-600 hover:bg-yellow-100 hover:scale-110 transition flex items-center justify-center shadow-sm" title="Edit">
                                 <i class="fas fa-edit text-xs"></i>
-                            </button>
+                            </button> --}}
 
                             {{-- Form Delete --}}
-                            <form id="delete-form-{{ $p->id }}" action="{{ route('admin.pengunjung.destroy', $p->id) }}" method="POST">
+                            {{-- FIX 2: Gunakan identitas_no sebagai ID unik --}}
+                            <form id="delete-form-{{ $p->identitas_no }}" action="{{ route('admin.pengunjung.destroy', $p->identitas_no) }}" method="POST">
                                 @csrf @method('DELETE')
-                                <button type="button" onclick="confirmDelete('{{ $p->id }}', '{{ $p->nama_lengkap }}')"
+                                <button type="button" onclick="confirmDelete('{{ $p->identitas_no }}', '{{ $p->nama_lengkap }}')"
                                         class="w-8 h-8 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 hover:scale-110 transition flex items-center justify-center shadow-sm" title="Hapus">
                                     <i class="fas fa-trash text-xs"></i>
                                 </button>
@@ -138,18 +144,19 @@
                                             <p class="text-sm font-mono font-bold text-gray-700">{{ $p->identitas_no }}</p>
                                         </div>
                                         <div>
-                                            <label class="block text-[10px] font-bold text-gray-400 uppercase">Sejak</label>
-                                            <p class="text-sm font-bold text-gray-700">{{ $p->created_at->format('d M Y') }}</p>
+                                            {{-- FIX 3: Ganti created_at dengan terakhir_kunjungan --}}
+                                            <label class="block text-[10px] font-bold text-gray-400 uppercase">Terakhir Masuk</label>
+                                            <p class="text-sm font-bold text-gray-700">
+                                                {{ $p->terakhir_kunjungan && $p->terakhir_kunjungan != '-' 
+                                                ? \Carbon\Carbon::parse($p->terakhir_kunjungan)->format('d M Y') 
+                                                : '-' }}
+                                            </p>
                                         </div>
                                     </div>
                                     <div class="pt-4 border-t border-gray-100">
                                         <div class="flex justify-between items-center py-2">
                                             <span class="text-xs text-gray-500">Status Akun</span>
                                             <span class="px-2 py-0.5 bg-green-100 text-green-600 rounded text-[10px] font-bold uppercase">Terverifikasi</span>
-                                        </div>
-                                        <div class="flex justify-between items-center py-2">
-                                            <span class="text-xs text-gray-500">Update Terakhir</span>
-                                            <span class="text-xs font-medium text-gray-700">{{ $p->updated_at->format('d/m/Y') }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -166,7 +173,8 @@
                                     <h3 class="font-bold text-gray-800 italic">Edit Profil Pengunjung</h3>
                                     <button @click="editModalOpen = false" class="text-gray-400 hover:text-red-500"><i class="fas fa-times"></i></button>
                                 </div>
-                                <form action="{{ route('admin.pengunjung.update', $p->id) }}" method="POST">
+                                {{-- FIX 2: Route update pakai identitas_no --}}
+                                <form action="{{ route('admin.pengunjung.update', $p->identitas_no) }}" method="POST">
                                     @csrf @method('PUT')
                                     <div class="p-6 space-y-4">
                                         <div>
@@ -208,13 +216,11 @@
             </tbody>
         </table>
     </div>
-
-    {{-- Pagination --}}
-    @if($pengunjung->hasPages())
-    <div class="px-6 py-4 border-t border-gray-100 bg-gray-50/30">
-        {{ $pengunjung->appends(request()->query())->links() }} 
+    
+    {{-- FIX 4: Pagination dihapus karena tidak didukung --}}
+    <div class="px-6 py-4 border-t border-gray-100 bg-gray-50/30 text-xs text-gray-400 text-center">
+        Menampilkan seluruh data dari Spreadsheet
     </div>
-    @endif
 </div>
 
 {{-- SweetAlert Logic --}}
@@ -233,6 +239,7 @@
             customClass: { popup: 'rounded-2xl' }
         }).then((result) => {
             if (result.isConfirmed) {
+                // ID di sini adalah No Identitas (NIK/NIM)
                 document.getElementById('delete-form-' + id).submit();
             }
         })

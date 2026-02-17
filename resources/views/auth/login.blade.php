@@ -17,7 +17,7 @@
             
             <div class="relative z-10">
                 <div class="bg-white/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-md shadow-inner ring-2 ring-white/30">
-                    <img src="{{ asset('img/logo_poliban.png') }}" alt="Logo Poliban" class="h-10 w-auto">
+                    <img src="{{ asset('images/logo_poliban.png') }}" alt="Logo Poliban" class="h-10 w-auto">
                 </div>
                 <h1 class="text-2xl font-bold tracking-wide font-sans">Login Internal</h1>
                 <p class="text-sm opacity-90 mt-1 font-medium">Khusus Admin & Ketua Jurusan</p>

@@ -13,7 +13,7 @@
                 <nav class="flex text-white/90 mt-2 text-sm font-medium tracking-wide drop-shadow-sm" aria-label="Breadcrumb">
                     <ol class="inline-flex items-center space-x-1 md:space-x-3">
                         <li class="inline-flex items-center">
-                            <a href="{{ route('guest.landing') }}" class="inline-flex items-center hover:text-white hover:underline transition-all">
+                            <a href="{{ route('guest.index') }}" class="inline-flex items-center hover:text-white hover:underline transition-all">
                                 <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a2 2 0 012-2h2a2 2 0 012 2v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path></svg>
                                 Home
                             </a>
@@ -137,7 +137,7 @@
                     </div>
 
                     <div class="pt-6 flex flex-col-reverse sm:flex-row gap-4 border-t border-gray-100 mt-8">
-                        <a href="{{ route('guest.landing') }}" class="w-full sm:w-auto px-8 py-3.5 rounded-xl border border-gray-300 text-gray-600 font-bold hover:bg-gray-50 active:bg-gray-100 transition-all flex justify-center items-center gap-2 text-center no-underline">
+                        <a href="{{ route('guest.index') }}" class="w-full sm:w-auto px-8 py-3.5 rounded-xl border border-gray-300 text-gray-600 font-bold hover:bg-gray-50 active:bg-gray-100 transition-all flex justify-center items-center gap-2 text-center no-underline">
                             Batal
                         </a>
                         <button type="submit" class="w-full sm:flex-1 px-8 py-3.5 rounded-xl bg-gradient-to-r from-pink-500 to-blue-500 hover:from-pink-400 hover:to-blue-400 text-white font-bold shadow-lg hover:shadow-xl hover:-translate-y-1 active:translate-y-0 transition-all duration-300 flex justify-center items-center gap-2">
@@ -170,8 +170,11 @@
     </div>
 </div>
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    // Bungkus dengan function untuk memastikan jQuery siap
+    $(document).ready(function() {
         
         // --- 1. MODAL LOGIC ---
         const modal = document.getElementById('customModal');
@@ -179,6 +182,8 @@
 
         window.showModal = function(title, message, type = 'success') {
             const iconBox = document.getElementById('modalIcon');
+            if(!iconBox) return;
+
             document.getElementById('modalTitle').innerText = title;
             document.getElementById('modalMessage').innerText = message;
 
@@ -206,75 +211,64 @@
             setTimeout(() => modal.classList.add('hidden'), 300);
         };
 
-        // --- 2. AUTO DETECT PRODI SAAT MENGETIK ---
-        const inputIdentitas = document.getElementById('identitas_no');
-        const selectInstansi = document.getElementById('asal_instansi');
+        // --- 2. AUTO DETECT PRODI ---
+        $('#identitas_no').on('input', function() {
+            let value = $(this).val().trim().toUpperCase();
+            let selectInstansi = $('#asal_instansi');
 
-        inputIdentitas.addEventListener('input', function(e) {
-            let value = this.value.trim().toUpperCase();
-
-            if (value.startsWith('C01')) {
-                selectInstansi.value = 'D3 Teknik Listrik';
-            } else if (value.startsWith('C02')) {
-                selectInstansi.value = 'D3 Teknik Elektronika';
-            } else if (value.startsWith('C03')) {
-                selectInstansi.value = 'D3 Teknik Informatika';
-            } else if (value.startsWith('C04')) {
-                selectInstansi.value = 'D4 Teknologi Rekayasa Otomasi';
-            } else if (value.startsWith('C05')) {
-                selectInstansi.value = 'D4 Sistem Informasi Kota Cerdas';
-            } else if (value.startsWith('C06')) {
-                selectInstansi.value = 'D4 Teknologi Rekayasa Pembangkit Energi';
-            } else if (/^\d/.test(value)) { 
-                // Jika diawali angka (0-9)
-                selectInstansi.value = 'Lainnya / Instansi Luar';
-            }
-            // Jika dihapus/kosong, biarkan apa adanya atau user bisa ganti manual
+            if (value.startsWith('C01')) selectInstansi.val('D3 Teknik Listrik');
+            else if (value.startsWith('C02')) selectInstansi.val('D3 Teknik Elektronika');
+            else if (value.startsWith('C03')) selectInstansi.val('D3 Teknik Informatika');
+            else if (value.startsWith('C04')) selectInstansi.val('D4 Teknologi Rekayasa Otomasi');
+            else if (value.startsWith('C05')) selectInstansi.val('D4 Sistem Informasi Kota Cerdas');
+            else if (value.startsWith('C06')) selectInstansi.val('D4 Teknologi Rekayasa Pembangkit Energi');
+            else if (/^\d/.test(value)) selectInstansi.val('Lainnya / Instansi Luar');
         });
 
-        // --- 3. CEK DATA LOGIC (FETCH API) ---
-        document.getElementById('btnCek').addEventListener('click', function() {
-            let noId = inputIdentitas.value.trim();
+        // --- 3. CEK DATA LOGIC (Pake jQuery murni biar ga bentrok) ---
+        $('#btnCek').on('click', function(e) {
+            e.preventDefault(); // Biar ga submit form
+            
+            let noId = $('#identitas_no').val().trim();
             if(noId === "") {
-                showModal('Peringatan', 'Harap masukkan nomor identitas (NIM/NIP) terlebih dahulu!', 'warning');
+                showModal('Peringatan', 'Harap masukkan nomor identitas terlebih dahulu!', 'warning');
                 return;
             }
 
-            let btn = this;
-            let originalContent = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-            btn.disabled = true;
+            let btn = $(this);
+            let originalContent = btn.html();
+            
+            btn.html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
 
-            fetch(`{{ route('guest.check') }}?no_id=${noId}`)
-                .then(response => response.json())
-                .then(data => {
-                    btn.innerHTML = originalContent;
-                    btn.disabled = false;
+            $.ajax({
+                url: "{{ route('guest.check') }}",
+                type: "GET",
+                data: { no_id: noId },
+                dataType: 'json',
+                success: function(res) {
+                    btn.html(originalContent).prop('disabled', false);
+                    
+                    let dataPengunjung = res.data ? res.data : res;
 
-                    // PERBAIKAN: Cek apakah data benar-benar ada dan tidak undefined
-                    if(data && data.nama_lengkap) {
-                        document.getElementById('nama_lengkap').value = data.nama_lengkap;
-                        selectInstansi.value = data.asal_instansi;
-                        showModal('Berhasil!', `Data ditemukan. Halo, ${data.nama_lengkap}.`, 'success');
+                    if(dataPengunjung && dataPengunjung.nama_lengkap) {
+                        $('#nama_lengkap').val(dataPengunjung.nama_lengkap);
+                        $('#asal_instansi').val(dataPengunjung.asal_instansi);
+                        showModal('Berhasil!', `Data ditemukan. Halo, ${dataPengunjung.nama_lengkap}.`, 'success');
                     } else {
-                        // Jika data tidak ditemukan, kosongkan nama (jangan tulis undefined)
-                        // dan JANGAN ubah pilihan dropdown prodi yang sudah terdeteksi otomatis
-                        document.getElementById('nama_lengkap').value = '';
-                        document.getElementById('nama_lengkap').focus();
+                        $('#nama_lengkap').val('').focus();
                         showModal('Pengunjung Baru', 'Identitas belum ada di sistem. Silakan isi nama secara manual.', 'info');
                     }
-                })
-                .catch(err => {
-                    btn.innerHTML = originalContent;
-                    btn.disabled = false;
-                    showModal('Error', 'Terjadi kesalahan saat menghubungi server.', 'warning');
-                });
+                },
+                error: function(xhr) {
+                    btn.html(originalContent).prop('disabled', false);
+                    console.error("Error Detail:", xhr.responseText);
+                    showModal('Error', 'Gagal terhubung ke server. Cek koneksi atau konfigurasi script.', 'warning');
+                }
+            });
         });
-
     });
 
-    // --- 4. TOGGLE KEPERLUAN LAINNYA ---
-    // Dipindah ke luar DOMContentLoaded karena dipanggil langsung lewat HTML onchange=""
+    // --- 4. TOGGLE KEPERLUAN (Native JS diluar Ready) ---
     function toggleKeperluanLainnya() {
         const selectKeperluan = document.getElementById('keperluan');
         const divLainnya = document.getElementById('input_keperluan_lainnya');
@@ -282,17 +276,18 @@
 
         if (selectKeperluan.value === 'Lainnya') {
             divLainnya.classList.remove('hidden');
-            divLainnya.classList.add('block');
             txtLainnya.setAttribute('required', 'required');
             txtLainnya.focus();
         } else {
             divLainnya.classList.add('hidden');
-            divLainnya.classList.remove('block');
             txtLainnya.removeAttribute('required');
             txtLainnya.value = '';
         }
     }
 </script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 @endsection

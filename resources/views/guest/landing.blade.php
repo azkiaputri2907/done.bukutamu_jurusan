@@ -16,7 +16,7 @@
         <nav class="flex flex-col sm:flex-row justify-between items-center w-full max-w-[95%] mx-auto mb-10 md:mb-20 gap-4 sm:gap-0">
             <div class="flex items-center gap-3 self-start sm:self-auto">
                 <div class="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-lg backdrop-blur-md flex items-center justify-center border border-white/20 shrink-0">
-                    <img src="{{ asset('img/logo_poliban.png') }}" alt="Logo" class="w-7 h-7 md:w-8 md:h-8 object-contain">
+                    <img src="{{ asset('images/logo_poliban.png') }}" alt="Logo" class="w-7 h-7 md:w-8 md:h-8 object-contain">
                 </div>
                 <div class="leading-tight">
                     <span class="text-white font-bold text-base sm:text-lg md:text-xl block tracking-wide">Jurusan Teknik Elektro</span>
@@ -121,7 +121,7 @@
                         </div>
                         <div>
                             <p class="text-4xl sm:text-5xl font-bold mb-1">{{ $totalPengunjung }}</p>
-                            <p class="text-xs opacity-90 uppercase tracking-widest font-semibold">Database Tamu</p>
+                            <p class="text-xs opacity-90 uppercase tracking-widest font-semibold">Total Tamu</p>
                         </div>
                     </div>
                     <div class="bg-gradient-to-br from-blue-500 to-indigo-600 text-white p-8 rounded-[2rem] shadow-xl transform hover:scale-105 transition duration-300 flex-1">
@@ -151,7 +151,7 @@
                     <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-pink-500 to-pink-600"></div>
                     <div class="relative w-32 h-32 md:w-40 md:h-40 mx-auto mb-6">
                         <div class="absolute inset-0 bg-pink-100 rounded-full scale-110 group-hover:scale-125 transition-transform duration-500"></div>
-                        <img src="{{ asset('img/pimpinan/kajur.png') }}" class="relative w-full h-full object-cover rounded-full border-4 border-white shadow-md" onerror="this.src='https://ui-avatars.com/api/?name=Helmy+Noor&background=random'">
+                        <img src="{{ asset('images/pimpinan/kajur.png') }}" class="relative w-full h-full object-cover rounded-full border-4 border-white shadow-md" onerror="this.src='https://ui-avatars.com/api/?name=Helmy+Noor&background=random'">
                     </div>
                     <h3 class="text-xl md:text-2xl font-bold text-gray-800 group-hover:text-pink-600 transition">M. Helmy Noor, S.ST., M.T.</h3>
                     <p class="text-gray-500 text-sm mt-1">Ketua Jurusan</p>
@@ -161,7 +161,7 @@
                     <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-blue-600"></div>
                     <div class="relative w-32 h-32 md:w-40 md:h-40 mx-auto mb-6">
                         <div class="absolute inset-0 bg-blue-100 rounded-full scale-110 group-hover:scale-125 transition-transform duration-500"></div>
-                        <img src="{{ asset('img/pimpinan/sekjur.png') }}" class="relative w-full h-full object-cover rounded-full border-4 border-white shadow-md" onerror="this.src='https://ui-avatars.com/api/?name=Rully+Rezki&background=random'">
+                        <img src="{{ asset('images/pimpinan/sekjur.png') }}" class="relative w-full h-full object-cover rounded-full border-4 border-white shadow-md" onerror="this.src='https://ui-avatars.com/api/?name=Rully+Rezki&background=random'">
                     </div>
                     <h3 class="text-xl md:text-2xl font-bold text-gray-800 group-hover:text-blue-600 transition">Rully Rezki Saputra, S.Pd., M.Pd.</h3>
                     <p class="text-gray-500 text-sm mt-1">Sekretaris Jurusan</p>
@@ -177,11 +177,11 @@
             <div class="flex flex-wrap justify-center gap-y-10 gap-x-8 lg:gap-12">
                 @php
                     $kaprodis = [
-                        ['name' => 'Ir. Lauhil Mahfudz H., S.T, M.T.', 'prodi' => 'D3 Teknik Listrik', 'img' => 'kaprodi1.png'],
-                        ['name' => 'Khairunnisa, S.T., M.T.', 'prodi' => 'D3 Teknik Elektronika', 'img' => 'kaprodi2.png'],
-                        ['name' => 'Fuad Sholihin, S.T., M.Kom.', 'prodi' => 'D3 Teknik Informatika', 'img' => 'kaprodi3.png'],
-                        ['name' => 'Zuraidah, S.T., M.T.', 'prodi' => 'D4 Tek. Rek. Pembangkit Energi', 'img' => 'kaprodi4.png'],
-                        ['name' => 'Dr. Kun Nursyaiful Priyo Pamungkas, S.Kom., M.Kom.', 'prodi' => 'D4 Sistem Informasi Kota Cerdas', 'img' => 'kaprodi5.png']
+                        ['name' => 'Ir. Lauhil Mahfudz H., S.T, M.T.', 'prodi' => 'D3 Teknik Listrik', 'images' => 'kaprodi1.png'],
+                        ['name' => 'Khairunnisa, S.T., M.T.', 'prodi' => 'D3 Teknik Elektronika', 'images' => 'kaprodi2.png'],
+                        ['name' => 'Fuad Sholihin, S.T., M.Kom.', 'prodi' => 'D3 Teknik Informatika', 'images' => 'kaprodi3.png'],
+                        ['name' => 'Zuraidah, S.T., M.T.', 'prodi' => 'D4 Tek. Rek. Pembangkit Energi', 'images' => 'kaprodi4.png'],
+                        ['name' => 'Dr. Kun Nursyaiful Priyo Pamungkas, S.Kom., M.Kom.', 'prodi' => 'D4 Sistem Informasi Kota Cerdas', 'images' => 'kaprodi5.png']
                     ];
                 @endphp
 
@@ -189,7 +189,7 @@
                 <div class="w-[45%] sm:w-[30%] lg:w-[15%] flex flex-col items-center text-center group">
                     <div class="relative w-24 h-24 sm:w-28 sm:h-28 mb-4">
                         <div class="absolute inset-0 bg-gradient-to-tr from-pink-400 to-blue-500 rounded-full group-hover:rotate-12 transition-transform opacity-70 blur-sm"></div>
-                        <img src="{{ asset('img/pimpinan/' . $k['img']) }}" alt="{{ $k['name'] }}"
+                        <img src="{{ asset('images/pimpinan/' . $k['images']) }}" alt="{{ $k['name'] }}"
                              class="relative w-full h-full object-cover rounded-full border-2 border-white bg-white hover:scale-105 transition duration-300"
                              onerror="this.src='https://ui-avatars.com/api/?name={{ urlencode($k['name']) }}&background=random&color=fff'">
                     </div>
@@ -211,7 +211,7 @@
             <div class="text-left">
                 <div class="flex items-center justify-start gap-4 mb-6">
                     <div class="w-14 h-14 bg-white rounded-lg flex items-center justify-center p-1">
-                        <img src="{{ asset('img/logo_poliban.png') }}" alt="Logo Poliban" class="w-full h-full object-contain">
+                        <img src="{{ asset('images/logo_poliban.png') }}" alt="Logo Poliban" class="w-full h-full object-contain">
                     </div>
                     <div>
                         <h4 class="text-white font-bold text-xl leading-none mb-1">Jurusan Teknik Elektro</h4>

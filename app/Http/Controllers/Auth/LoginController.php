@@ -3,42 +3,44 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Foundation\Auth\AuthenticatesUsers;
-use Illuminate\Http\Request; // Tambahkan ini
+use Illuminate\Http\Request;
+use App\Services\GoogleSheetService;
 
 class LoginController extends Controller
 {
-    use AuthenticatesUsers;
+    protected $sheetService;
 
-    /**
-     * Redirect default jika method authenticated tidak ditemukan
-     */
-    protected $redirectTo = '/dashboard';
-
-    public function __construct()
-    {
-        $this->middleware('guest')->except('logout');
-        $this->middleware('auth')->only('logout');
+    public function __construct(GoogleSheetService $sheetService) {
+        $this->sheetService = $sheetService;
     }
 
-    /**
-     * Logika pengalihan setelah login berhasil
-     */
-    protected function authenticated(Request $request, $user)
-    {
-        // Cek nama role dari relasi 'role' di model User
-        if ($user->role && $user->role->nama_role === 'Administrator') {
-            return redirect('/dashboard'); // Arahkan ke dashboard admin
-        } elseif ($user->role && $user->role->nama_role === 'Ketua Jurusan') {
-            return redirect('/dashboard'); // Arahkan ke dashboard yang sama (karena sidebar Anda sudah otomatis)
+    public function showLoginForm() {
+        if (session()->has('user')) {
+            return redirect()->route('admin.dashboard');
+        }
+        return view('auth.login');
+    }
+
+    public function login(Request $request) {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required'
+        ]);
+
+        $result = $this->sheetService->loginCheck($request->email, $request->password);
+
+        if (isset($result['status']) && $result['status'] === 'success') {
+            // Simpan data user hasil return GAS ke session
+            session(['user' => $result['user']]);
+            return redirect()->route('admin.dashboard')->with('success', 'Selamat datang, ' . $result['user']['name']);
         }
 
-        // Jika tidak ada role yang cocok, arahkan ke home atau dashboard default
-        return redirect('/dashboard');
+        return back()->with('error', 'Email atau password salah.');
     }
 
-    protected function loggedOut(\Illuminate\Http\Request $request)
-{
-    return redirect()->route('guest.landing');
-}
+    public function logout() {
+        session()->forget('user');
+        session()->flush();
+        return redirect()->route('guest.index');
+    }
 }
