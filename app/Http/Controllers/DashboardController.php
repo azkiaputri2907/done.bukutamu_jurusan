@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User; // User tetap di Database Lokal demi keamanan
 use Illuminate\Support\Facades\DB;
+use App\Services\GoogleSheetService;
 
 class DashboardController extends Controller
 {
@@ -294,12 +295,30 @@ public function pengunjung(Request $request)
 }
 
     // --- DATA USER (Tetap di Local Database untuk Keamanan Login) ---
-    public function users()
-    {
-        $users = User::all();
-        $roles = DB::table('master_role')->get();
-        return view('admin.users.index', compact('users', 'roles'));
-    }
+public function users(GoogleSheetService $sheetService)
+{
+    $rawData = $sheetService->readSheet('master_user'); // Sesuaikan nama sheet di GAS
+
+    // UNTUK DEBUG: Hapus tanda komentar di bawah ini jika masih kosong
+    // dd($rawData); 
+
+    $users = collect($rawData)->map(function($item) {
+        // Sesuaikan key dengan header di Google Sheet (role_id, name, email, foto)
+        $roleId = $item['role_id'] ?? 0;
+        $roleName = ($roleId == 1) ? 'Administrator' : (($roleId == 2) ? 'Ketua Jurusan' : 'Staff');
+
+        return (object) [
+            'name'  => $item['name'] ?? 'Guest',
+            'email' => $item['email'] ?? '-',
+            'foto'  => $item['foto'] ?? null,
+            'role'  => (object) [
+                'nama_role' => $roleName
+            ],
+        ];
+    });
+
+    return view('admin.users.index', compact('users'));
+}
 
     public function storeUser(Request $request)
     {

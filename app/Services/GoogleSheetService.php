@@ -36,4 +36,21 @@ class GoogleSheetService
 
         return ['status' => 'error', 'message' => 'Gagal terhubung ke server database.'];
     }
+
+    public function readSheet($sheetName)
+{
+    // Gunakan GET karena di GAS ada di function doGet
+    $response = Http::get($this->webAppUrl, [
+        'action' => 'read',
+        'sheet'  => $sheetName
+    ]);
+
+    if ($response->successful()) {
+        $result = $response->json();
+        return $result['data'] ?? [];
+    }
+
+    return [];
+}
+
 }
