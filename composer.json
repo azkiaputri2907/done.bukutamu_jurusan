@@ -78,8 +78,9 @@
     },
     "extra": {
         "google/apiclient-services": [
+            "Sheets",
             "Drive",
-            "Sheets"
+            "Oauth2"
         ]
     },
     "config": {
