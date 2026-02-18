@@ -11,13 +11,6 @@
         <h2 class="text-2xl font-extrabold text-gray-800 tracking-tight">Data Pengunjung</h2>
         <p class="text-sm text-gray-500 font-medium">Manajemen seluruh data pengunjung yang terdaftar.</p>
     </div>
-
-    @can('admin-only')
-    <div class="hidden md:flex items-center gap-2 bg-blue-50 text-blue-600 px-4 py-2 rounded-xl text-xs font-bold border border-blue-100">
-        <i class="fas fa-users"></i>
-        <span>Total: {{ $pengunjung->count() }} Orang</span>
-    </div>
-    @endcan
 </div>
 
 {{-- Search & Filter Section --}}
@@ -105,7 +98,7 @@
                                 <i class="fas fa-eye text-xs"></i>
                             </button>
 
-                        @can('admin-only')
+                            @if(session('user')['role_nama'] === 'Administrator')
                             {{-- Button Edit --}}
                             {{-- <button @click="editModalOpen = true" class="w-8 h-8 rounded-lg bg-yellow-50 text-yellow-600 hover:bg-yellow-100 hover:scale-110 transition flex items-center justify-center shadow-sm" title="Edit">
                                 <i class="fas fa-edit text-xs"></i>
@@ -120,7 +113,7 @@
                                     <i class="fas fa-trash text-xs"></i>
                                 </button>
                             </form>
-                        @endcan
+                        @endif
                         </div>
 
                         {{-- MODAL DETAIL --}}

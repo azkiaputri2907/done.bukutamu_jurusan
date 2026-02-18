@@ -9,16 +9,6 @@
         <h2 class="text-xl md:text-2xl font-extrabold text-gray-800 tracking-tight">Data Kunjungan</h2>
         <p class="text-xs md:text-sm text-gray-500 font-medium">Daftar riwayat tamu yang berkunjung (Cloud Data)</p>
     </div>
-
-    @can('admin-only')
-    <a href="{{ route('guest.form') }}" target="_blank" 
-       class="w-full md:w-auto group flex items-center justify-center gap-2 bg-gradient-to-r from-[#3366ff] to-[#a044ff] text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-blue-200 transition transform active:scale-95 hover:scale-105">
-        <div class="bg-white/20 p-1 rounded-md">
-            <i class="fas fa-plus text-[10px]"></i>
-        </div>
-        <span class="text-sm">Tambah Manual</span>
-    </a>
-    @endcan
 </div>
 
 {{-- Search & Filter Section --}}
@@ -94,7 +84,8 @@
                                 <i class="fas fa-eye text-[10px]"></i>
                             </button>
 
-                            @can('admin-only')
+                            @if(session('user')['role_nama'] === 'Administrator')
+
                             <button @click="editModalOpen = true" class="w-8 h-8 md:w-9 md:h-9 rounded-lg md:rounded-xl bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center">
                                 <i class="fas fa-edit text-[10px]"></i>
                             </button>
@@ -106,7 +97,7 @@
                                     <i class="fas fa-trash text-[10px]"></i>
                                 </button>
                             </form>
-                            @endcan
+                            @endif
                         </div>
 
                         {{-- MODAL VIEW DETAIL --}}
@@ -138,7 +129,7 @@
                         </div>
 
                         {{-- MODAL EDIT (DINAMIS) --}}
-                        @can('admin-only')
+                       @if(session('user')['role_nama'] === 'Administrator')
                         <div x-show="editModalOpen" class="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4 text-left" style="display: none;" x-transition>
                             <div @click.away="editModalOpen = false" class="bg-white rounded-[2rem] shadow-2xl w-full max-w-sm md:max-w-md overflow-hidden">
                                 <form action="{{ route('admin.kunjungan.update', $row->nomor_kunjungan) }}" method="POST">
@@ -157,7 +148,7 @@
                                             <input type="text" value="{{ $row->nama_lengkap }}" disabled class="w-full bg-gray-100 border-none rounded-xl px-4 py-2.5 text-xs text-gray-500 font-bold cursor-not-allowed">
                                         </div>
                                         
-                                        <div>
+                                        {{-- <div>
                                             <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Pilih Keperluan</label>
                                             <select name="keperluan_master" class="w-full border-gray-100 rounded-xl focus:ring-2 focus:ring-amber-500 text-xs bg-gray-50 p-2.5 font-medium">
                                                 <option value="">-- Pilih Keperluan --</option>
@@ -171,7 +162,7 @@
                                                 @endif
                                                 <option value="Lainnya">Lainnya / Manual</option>
                                             </select>
-                                        </div>
+                                        </div> --}}
 
                                         <div>
                                             <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Detail Keperluan</label>
@@ -186,7 +177,7 @@
                                 </form>
                             </div>
                         </div>
-                        @endcan
+                        @endif
 
                     </td>
                 </tr>

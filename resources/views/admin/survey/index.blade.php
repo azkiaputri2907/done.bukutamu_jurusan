@@ -125,10 +125,10 @@
 
 @if(session('user')['role_nama'] === 'Administrator')
     {{-- Tombol Edit --}}
-    <button @click="editModalOpen = true" title="Edit Data" 
+    {{-- <button @click="editModalOpen = true" title="Edit Data" 
         class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 border border-amber-100 hover:bg-amber-600 hover:text-white transition-all duration-300 shadow-sm flex items-center justify-center">
         <i class="fas fa-edit text-xs"></i>
-    </button>
+    </button> --}}
 
     {{-- Tombol Delete --}}
     <form id="delete-form-{{ $loop->index }}" action="{{ route('admin.survey.destroy') }}" method="POST" class="inline">
