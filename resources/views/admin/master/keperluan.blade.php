@@ -99,9 +99,11 @@
                             </button>
 
                             {{-- Form Hapus (Hidden) --}}
-                            <form id="delete-form-{{ $k->id }}" action="{{ route('admin.keperluan.destroy', $k->id) }}" method="POST" class="hidden">
-                                @csrf @method('DELETE')
-                            </form>
+                            @if(isset($k->id))
+                                <form id="delete-form-{{ $k->id }}" action="{{ route('admin.keperluan.destroy', $k->id) }}" method="POST" class="hidden">
+                                    @csrf @method('DELETE')
+                                </form>
+                            @endif
                         </div>
 
                         {{-- MODAL DETAIL (Lihat) --}}

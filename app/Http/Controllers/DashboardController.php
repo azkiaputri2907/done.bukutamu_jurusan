@@ -34,37 +34,30 @@ private function fetchCloudData($sheetName)
 {
     try {
         $url = env('GOOGLE_SCRIPT_URL') . "?action=read&sheet=" . $sheetName;
-        $response = Http::withoutVerifying()->timeout(5)->get($url);
+        $response = Http::withoutVerifying()->timeout(10)->get($url);
 
         if ($response->successful()) {
             $json = $response->json();
-            
-            // Jika status dari Google Script error
-            if (($json['status'] ?? '') === 'error') {
-                Log::error("Google Script Error: " . $json['message']);
-                return [];
-            }
-
             $rows = $json['data'] ?? [];
             $result = [];
 
-            foreach ($rows as $index => $row) {
-                // 1. Lewati baris 0 (Header)
-                // 2. Pastikan baris memiliki data (tidak kosong)
-                if ($index === 0 || empty($row) || !isset($row[0])) continue;
+            foreach ($rows as $row) {
+                // Ambil ID dengan mencoba berbagai kemungkinan nama kolom
+                $id = $row['Id'] ?? ($row['id'] ?? ($row['No Identitas'] ?? null));
+                
+                // PENTING: Jika ID tetap null/kosong, jangan masukkan ke array
+                // Ini mencegah route() meledak karena ID kosong
+                if (!$id) continue;
 
                 $result[] = (object) [
-                    // Ambil ID dari kolom pertama (index 0)
-                    'id' => $row[0], 
-                    // Ambil Keterangan dari kolom kedua (index 1)
-                    'keterangan' => $row[1] ?? 'Tanpa Keterangan',
+                    'id'         => $id,
+                    'keterangan' => $row['Keterangan'] ?? ($row['keterangan'] ?? 'Tanpa Keterangan'),
                 ];
             }
-            
             return $result;
         }
     } catch (\Exception $e) {
-        Log::error("Koneksi Gagal: " . $e->getMessage());
+        Log::error("Gagal Fetch: " . $e->getMessage());
     }
     return [];
 }
@@ -329,17 +322,13 @@ public function pengunjung(Request $request)
 
     // --- MASTER KEPERLUAN ---
     public function masterKeperluan()
-    {
-        $data = $this->fetchCloudData($sheetName = 'master_keperluan');
-        $raw = $data ?? [];
-        if (count($raw) > 0) array_shift($raw);
+{
+    // Cukup panggil sekali saja untuk efisiensi
+    $keperluan = $this->fetchCloudData('master_keperluan');
 
-        $keperluan = $this->fetchCloudData('master_keperluan');
+    return view('admin.master.keperluan', compact('keperluan'));
+}
 
-        return view('admin.master.keperluan', compact('keperluan'));
-    }
-
-    // --- LAPORAN ---
     // --- LAPORAN ---
 public function laporan()
 {
@@ -594,15 +583,20 @@ public function updateKeperluan(Request $request, $id)
 public function destroyKeperluan($id)
 {
     try {
-        $response = Http::post(env('GOOGLE_SCRIPT_URL'), [
-            'action' => 'deleteKeperluan',
-            'id' => $id,
-        ]);
+        $response = Http::withoutVerifying()
+            ->asJson() // Mengirimkan sebagai application/json
+            ->post(env('GOOGLE_SCRIPT_URL'), [
+                'action' => 'deleteKeperluan',
+                'id'     => (string)$id, // Memastikan ID adalah string
+            ]);
 
-        if ($response->successful() && $response->json()['status'] === 'success') {
+        $res = $response->json();
+
+        if ($response->successful() && ($res['status'] ?? '') === 'success') {
             return redirect()->back()->with('success', 'Keperluan berhasil dihapus.');
         }
-        return redirect()->back()->with('error', 'Gagal menghapus data.');
+        
+        return redirect()->back()->with('error', 'Gagal: ' . ($res['message'] ?? 'Respons tidak valid'));
     } catch (\Exception $e) {
         return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
     }
