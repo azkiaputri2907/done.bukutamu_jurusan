@@ -12,7 +12,5 @@
 /README.md
 /.git
 /.env
-/package.json
-/package-lock.json
 /webpack.mix.js
 /vite.config.js
