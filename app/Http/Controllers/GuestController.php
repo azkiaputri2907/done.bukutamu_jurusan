@@ -73,32 +73,30 @@ public function check(Request $request)
     try {
         $scriptUrl = env('GOOGLE_SCRIPT_URL');
         
-        // Tambahkan withOptions untuk mengikuti redirect dan tanpa verifikasi SSL jika perlu
-        $response = Http::timeout(15)
-            ->withOptions([
-                'allow_redirects' => true,
-                'verify' => false, 
-            ])
-            ->get($scriptUrl, [
-                'action' => 'searchPengunjung',
-                'no_id'  => $request->no_id
-            ]);
+        // Pastikan URL tidak kosong
+        if (!$scriptUrl) {
+            return response()->json(['status' => 'error', 'message' => 'Konfigurasi URL tidak ditemukan di server.'], 500);
+        }
+
+        $response = Http::withOptions([
+            'allow_redirects' => true, // WAJIB: Google Apps Script sering redirect
+            'verify' => false,         // Biar nggak ribet sama SSL di server
+        ])
+        ->timeout(20) // Tambah waktu tunggu jadi 20 detik
+        ->get($scriptUrl, [
+            'action' => 'searchPengunjung',
+            'no_id'  => $request->no_id
+        ]);
 
         if ($response->successful()) {
-            $result = $response->json();
-            if (isset($result['status']) && $result['status'] == 'success') {
-                return response()->json([
-                    'status' => 'success',
-                    'data'   => $result['data']
-                ]);
-            }
+            return response()->json($response->json());
         }
+        
+        return response()->json(['status' => 'error', 'message' => 'Google Script merespon dengan error'], 500);
+
     } catch (\Exception $e) {
-        Log::error('Gagal cek data ke Sheets: ' . $e->getMessage());
         return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
     }
-
-    return response()->json(['status' => 'not_found', 'data' => null]);
 }
 
     public function storeKunjungan(Request $request) {
