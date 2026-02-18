@@ -1,11 +1,2 @@
-/node_modules
 /vendor
-/.git
-/storage/framework/cache/*
-/storage/framework/sessions/*
-/storage/framework/views/*.php
-/storage/logs/*
-/public/storage
-/tests
-/public/images/pimpinan
-*.map
+/node_modules
