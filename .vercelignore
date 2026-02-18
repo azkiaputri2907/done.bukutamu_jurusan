@@ -1,23 +1,11 @@
-# Dependensi
 /node_modules
 /vendor
-
-# Git
 /.git
-/.github
-
-# File besar & sampah
-/public/images/pimpinan
-/public/storage
 /storage/framework/cache/*
 /storage/framework/sessions/*
 /storage/framework/views/*.php
 /storage/logs/*
+/public/storage
 /tests
-/.phpunit.cache
-
-# File Config Lokal
-.env
-.env.example
-package-lock.json
-composer.lock
+/public/images/pimpinan
+*.map
