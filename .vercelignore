@@ -1,9 +1,8 @@
 /node_modules
-/public/storage
+/vendor/google/apiclient-services
 /storage/framework/cache/*
 /storage/framework/sessions/*
 /storage/framework/views/*
 /storage/logs/*
 /tests
 .git
-.github

@@ -69,12 +69,18 @@
         ],
         "pre-package-uninstall": [
             "Illuminate\\Foundation\\ComposerScripts::prePackageUninstall"
+        ],
+        "post-install-cmd": [
+            "rm -rf vendor/google/apiclient-services/src/Google/Service/Cloud*",
+            "rm -rf vendor/google/apiclient-services/src/Google/Service/Ads*",
+            "rm -rf vendor/dompdf/dompdf/lib/res/fonts/*.ttf" 
         ]
     },
     "extra": {
-        "laravel": {
-            "dont-discover": []
-        }
+        "google/apiclient-services": [
+            "Drive",
+            "Sheets"
+        ]
     },
     "config": {
         "optimize-autoloader": true,

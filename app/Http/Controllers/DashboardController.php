@@ -295,25 +295,22 @@ public function pengunjung(Request $request)
 }
 
     // --- DATA USER (Tetap di Local Database untuk Keamanan Login) ---
-public function users(GoogleSheetService $sheetService)
+    public function users()
 {
-    $rawData = $sheetService->readSheet('master_user'); // Sesuaikan nama sheet di GAS
+    // 1. Ambil data dari Google Sheets (sesuaikan dengan service yang Anda gunakan)
+    // Pastikan sheet yang dituju adalah 'master_users'
+    $usersData = $this->googleSheetService->readSheet('master_users'); 
 
-    // UNTUK DEBUG: Hapus tanda komentar di bawah ini jika masih kosong
-    // dd($rawData); 
-
-    $users = collect($rawData)->map(function($item) {
-        // Sesuaikan key dengan header di Google Sheet (role_id, name, email, foto)
-        $roleId = $item['role_id'] ?? 0;
-        $roleName = ($roleId == 1) ? 'Administrator' : (($roleId == 2) ? 'Ketua Jurusan' : 'Staff');
-
+    // 2. Mapping data agar formatnya konsisten (biasanya Google Sheets mengembalikan array of arrays)
+    $users = collect($usersData)->map(function($item) {
         return (object) [
-            'name'  => $item['name'] ?? 'Guest',
+            'id'    => $item['id'] ?? null,
+            'name'  => $item['name'] ?? 'User',
             'email' => $item['email'] ?? '-',
-            'foto'  => $item['foto'] ?? null,
             'role'  => (object) [
-                'nama_role' => $roleName
+                'nama_role' => $item['role_nama'] ?? 'Staff'
             ],
+            // Tambahkan field lain jika ada di sheet
         ];
     });
 
