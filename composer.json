@@ -68,13 +68,15 @@
         "pre-package-uninstall": [
             "Illuminate\\Foundation\\ComposerScripts::prePackageUninstall"
         ],
-        "post-install-cmd": [
-            "Illuminate\\Foundation\\ComposerScripts::postInstall",
-            "@php artisan vendor:publish --tag=laravel-assets --ansi --force",
-            "rm -rf vendor/google/apiclient-services/src/Google/Service/[A-R]*",
-            "rm -rf vendor/google/apiclient-services/src/Google/Service/[T-Z]*",
-            "rm -rf vendor/dompdf/dompdf/lib/res/fonts/*.ttf"
-        ]
+        "scripts": {
+    "post-install-cmd": [
+        "Illuminate\\Foundation\\ComposerScripts::postInstall",
+        "@php artisan vendor:publish --tag=laravel-assets --ansi --force",
+        "rm -rf vendor/google/apiclient-services/src/Google/Service/[A-R]*",
+        "rm -rf vendor/google/apiclient-services/src/Google/Service/[T-Z]*",
+        "rm -rf vendor/dompdf/dompdf/lib/res/fonts/*.ttf"
+    ]
+}
     },
     "extra": {
         "google/apiclient-services": [
