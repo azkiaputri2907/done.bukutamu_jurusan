@@ -1,0 +1,25 @@
+# Abaikan folder Git (Paling Penting!)
+.git
+.github
+
+# Abaikan dependensi frontend (Sudah jadi aset di /public/build)
+node_modules
+
+# Abaikan testing dan file dev
+tests
+phpunit.xml
+.editorconfig
+.styleci.yml
+README.md
+
+# Abaikan cache Laravel
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*.php
+storage/logs/*
+
+# Abaikan file build tool
+package.json
+package-lock.json
+vite.config.js
+postcss.config.js
