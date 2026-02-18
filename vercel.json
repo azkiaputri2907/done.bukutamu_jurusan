@@ -1,10 +1,12 @@
 {
   "version": 2,
-  "functions": {
-    "api/*.php": {
-      "runtime": "vercel-php@0.7.2"
-    }
-  },
+    "installCommand": "composer install --no-dev && npm install",
+    "buildCommand": "npm run build",
+    "functions": {
+        "api/*.php": {
+            "runtime": "vercel-php@0.7.2"
+        }
+    },
   "routes": [
     {
       "src": "/(css|js|build|assets|storage|images)/(.*)",
