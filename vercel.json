@@ -1,7 +1,5 @@
 {
   "version": 2,
-    "installCommand": "composer install --no-dev && npm install",
-    "buildCommand": "npm run build",
     "functions": {
         "api/*.php": {
             "runtime": "vercel-php@0.7.2"
