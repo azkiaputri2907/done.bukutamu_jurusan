@@ -46,10 +46,16 @@ public function index() {
         $keperluan_master = $this->fetchSheetsData('master_keperluan');
 
         // Jika Sheets kosong/error, sediakan fallback (pilihan darurat)
+        // 2. FALLBACK: Jika Sheets kosong/error/koneksi putus
         if (empty($keperluan_master)) {
             $keperluan_master = [
-                (object)['keterangan' => 'Urusan Umum'],
-                (object)['keterangan' => 'Lainnya'],
+                (object)['keterangan' => 'Legalisir Ijazah'],
+                (object)['keterangan' => 'Konsultasi Akademik'],
+                (object)['keterangan' => 'Pengajuan Judul TA'],
+                (object)['keterangan' => 'Tamu Dinas / Instansi Luar'],
+                (object)['keterangan' => 'Peminjaman Laboratorium'],
+                (object)['keterangan' => 'Urusan Administrasi Jurusan']
+                // Jangan masukkan 'Lainnya' disini jika di View sudah di-hardcode
             ];
         }
 
@@ -234,29 +240,37 @@ public function check(Request $request)
         }
     }
 
-        private function fetchSheetsData($sheetName = 'master_keperluan')
+private function fetchSheetsData($sheetName = 'master_keperluan')
     {
         try {
             $scriptUrl = env('GOOGLE_SCRIPT_URL');
-            // Memanggil action 'read' yang sudah kita buat di Apps Script sebelumnya
-            $response = Http::timeout(10)->get($scriptUrl, [
+            
+            if (!$scriptUrl) {
+                Log::warning("GOOGLE_SCRIPT_URL belum diset di .env");
+                return [];
+            }
+
+            $response = Http::timeout(5)->get($scriptUrl, [
                 'action' => 'read',
                 'sheet'  => $sheetName
             ]);
 
             if ($response->successful()) {
                 $json = $response->json();
-                $rows = $json['data'] ?? [];
+                $rows = $json['data'] ?? []; // Asumsi format JSON: { "data": [ ["id", "ket"], ... ] }
                 $result = [];
 
                 foreach ($rows as $index => $row) {
-                    // Lewati header (index 0) dan baris kosong
-                    if ($index === 0 || empty($row[0])) continue;
-
-                    $result[] = (object) [
-                        'id' => $row[0],
-                        'keterangan' => $row[1] ?? '-'
-                    ];
+                    // Skip Header (index 0)
+                    if ($index === 0) continue;
+                    
+                    // Pastikan row memiliki data keterangan (index 1)
+                    if (!empty($row[1])) {
+                        $result[] = (object) [
+                            'id' => $row[0] ?? uniqid(),
+                            'keterangan' => trim($row[1]) // Trim spasi berlebih
+                        ];
+                    }
                 }
                 return $result;
             }
