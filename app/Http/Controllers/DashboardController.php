@@ -14,26 +14,20 @@ use App\Services\GoogleSheetService;
 
 class DashboardController extends Controller
 {
-public function __construct()
+    protected $googleSheetService;
+
+public function __construct(GoogleSheetService $googleSheetService)
 {
+    $this->googleSheetService = $googleSheetService;
+
     $this->middleware(function ($request, $next) {
-        // 1. Cek apakah sudah login (ada session user)
         if (!session()->has('user')) {
-            return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu.');
+            return redirect()->route('login');
         }
-
-        // 2. Cek Proteksi Role (Opsional jika ingin proteksi per halaman)
-        $user = session('user');
-        $currentRoute = $request->route()->getName();
-
-        // Contoh: Hanya Administrator yang boleh buka halaman users
-        if (str_contains($currentRoute, 'admin.users') && $user['role_id'] != 1) {
-            return redirect()->route('admin.dashboard')->with('error', 'Anda tidak memiliki akses.');
-        }
-
         return $next($request);
     });
 }
+
 
     // Fungsi pembantu untuk mengambil semua data dari Google Sheets
 private function fetchCloudData($sheetName)
@@ -299,20 +293,23 @@ public function pengunjung(Request $request)
 {
     // 1. Ambil data dari Google Sheets (sesuaikan dengan service yang Anda gunakan)
     // Pastikan sheet yang dituju adalah 'master_users'
-    $usersData = $this->googleSheetService->readSheet('master_users'); 
+    $usersData = $this->googleSheetService->readSheet('master_user'); 
 
     // 2. Mapping data agar formatnya konsisten (biasanya Google Sheets mengembalikan array of arrays)
     $users = collect($usersData)->map(function($item) {
-        return (object) [
-            'id'    => $item['id'] ?? null,
-            'name'  => $item['name'] ?? 'User',
-            'email' => $item['email'] ?? '-',
-            'role'  => (object) [
-                'nama_role' => $item['role_nama'] ?? 'Staff'
-            ],
-            // Tambahkan field lain jika ada di sheet
-        ];
-    });
+    return (object) [
+        'role_id' => $item['role_id'] ?? null,
+        'name'    => $item['name'] ?? 'User',
+        'email'   => $item['email'] ?? '-',
+        'foto'    => $item['foto'] ?? null, // ← INI WAJIB ADA
+        'role'    => (object)[
+            'nama_role' => ($item['role_id'] == 1) 
+                ? 'Administrator' 
+                : 'Ketua Jurusan'
+        ],
+    ];
+});
+
 
     return view('admin.users.index', compact('users'));
 }
