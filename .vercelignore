@@ -1,25 +1,18 @@
-# Dependency folders
+/vendor
 /node_modules
-/vendor/fakerphp
-/vendor/phpunit
-/vendor/mockery
-/vendor/hamcrest
-/vendor/myclabs
-/vendor/phar-io
-/vendor/sebastian
-
-# Laravel folders
-/storage/framework/cache/*
+/public/storage
+/storage/*.key
+/storage/framework/cache/data/*
 /storage/framework/sessions/*
+/storage/framework/testing/*
 /storage/framework/views/*
 /storage/logs/*
 /tests
-
-# Config/Build files
-.env
-phpunit.xml
-.git
-.github
-node_modules
-/public/hot
-/public/storage
+/phpunit.xml
+/README.md
+/.git
+/.env
+/package.json
+/package-lock.json
+/webpack.mix.js
+/vite.config.js
