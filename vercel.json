@@ -2,7 +2,17 @@
     "version": 2,
     
     "functions": {
-        "api/*.php": { "runtime": "vercel-php@0.7.2" }
+        "api/*.php": { "runtime": "vercel-php@0.7.2", "includeFiles": [
+        "app/**",
+        "bootstrap/**",
+        "config/**",
+        "database/**",
+        "public/**",
+        "resources/views/**",
+        "routes/**",
+        "vendor/**"
+      ] }
+        
     },
     "routes": [
         {
