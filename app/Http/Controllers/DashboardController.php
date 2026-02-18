@@ -114,7 +114,7 @@ private function fetchCloudData($sheetName)
                     'nama_lengkap'    => $row[3] ?? '-',
                     'asal_instansi'   => $row[4] ?? '-',
                     'keperluan'       => $row[5] ?? '-',
-                    'detail_keperluan'=> $row[6] ?? '-',
+
                 ])->reverse();
 
                 // 2. PROSES DATA MASTER KEPERLUAN (TAMBAHAN BARU)

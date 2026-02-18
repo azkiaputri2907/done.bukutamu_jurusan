@@ -130,7 +130,7 @@ public function check(Request $request)
             Http::timeout(10)->post($scriptUrl, [
                 'action'    => 'append',
                 'sheetName' => 'bukutamu',
-                'data'      => [$nomorKunjungan, $today, $hari, $request->nama_lengkap, $request->asal_instansi, $keperluanFinal, $request->detail_keperluan ?? '-']
+                'data'      => [$nomorKunjungan, $today, $hari, $request->nama_lengkap, $request->asal_instansi, $keperluanFinal]
             ]);
 
             // Simpan/Update ke sheet 'pengunjung'
