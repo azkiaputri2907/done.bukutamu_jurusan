@@ -1,34 +1,23 @@
-# Folder Dependensi (Wajib)
+# Dependensi
 /node_modules
 /vendor
 
-# Folder Git & Tooling
+# Git
 /.git
 /.github
-/.vscode
-/.idea
-/tests
-/.phpunit.cache
 
-# File Sampah Build
-/public/build/assets/*.map
-public/images/pimpinan
-public/storage
-mix-manifest.json
-package-lock.json
-composer.lock
-
-# Laravel Temp Files
+# File besar & sampah
+/public/images/pimpinan
+/public/storage
 /storage/framework/cache/*
 /storage/framework/sessions/*
 /storage/framework/views/*.php
 /storage/logs/*
+/tests
+/.phpunit.cache
+
+# File Config Lokal
 .env
 .env.example
-
-# File Lainnya
-README.md
-phpunit.xml
-vite.config.js
-postcss.config.js
-tailwind.config.js
+package-lock.json
+composer.lock
