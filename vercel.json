@@ -1,10 +1,16 @@
 {
     "version": 2,
-    
-    "functions": {
-        "api/*.php": { "memory": 1024, "maxDuration": 10, "runtime": "vercel-php@0.7.2", "installCommand": "composer install --no-dev --optimize-autoloader" }
-        
-    },
+    "builds": [
+        {
+            "src": "api/*.php",
+            "use": "vercel-php@0.7.2",
+            "config": { "maxDuration": 10 }
+        },
+        {
+            "src": "package.json",
+            "use": "@vercel/static-build"
+        }
+    ],
     "routes": [
         {
             "src": "/(css|js|build|assets|storage|images)/(.*)",
@@ -15,4 +21,4 @@
             "dest": "/api/index.php"
         }
     ]
-    }
+}
