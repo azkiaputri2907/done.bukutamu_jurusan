@@ -4,6 +4,7 @@ namespace App\Providers;
 use Illuminate\Support\Facades\Gate;
 use App\Models\User;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,11 +20,11 @@ class AppServiceProvider extends ServiceProvider
      * Bootstrap any application services.
      */
 
-public function boot(): void
-{
-    Gate::define('admin-only', function ($user) {
-        // Karena di Sheet role Admin adalah 1, maka:
-        return $user->role == '1'; 
-    });
-}
+public function boot()
+    {
+        // Paksa HTTPS jika di produksi (Vercel)
+        if (config('app.env') === 'production') {
+            URL::forceScheme('https');
+        }
+    }
 }

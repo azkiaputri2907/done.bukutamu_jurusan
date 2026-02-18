@@ -73,29 +73,33 @@ public function check(Request $request)
     try {
         $scriptUrl = env('GOOGLE_SCRIPT_URL');
         
-        // Pastikan URL tidak kosong
         if (!$scriptUrl) {
-            return response()->json(['status' => 'error', 'message' => 'Konfigurasi URL tidak ditemukan di server.'], 500);
+            return response()->json(['status' => 'error', 'message' => 'URL tidak ditemukan.'], 500);
         }
 
-        $response = Http::withOptions([
-            'allow_redirects' => true, // WAJIB: Google Apps Script sering redirect
-            'verify' => false,         // Biar nggak ribet sama SSL di server
+        // Kita gunakan asForm() atau kirim parameter langsung di URL untuk GET
+        $response = Http::withHeaders([
+            'Accept' => 'application/json',
         ])
-        ->timeout(20) // Tambah waktu tunggu jadi 20 detik
-        ->get($scriptUrl, [
-            'action' => 'searchPengunjung',
-            'no_id'  => $request->no_id
-        ]);
+        ->timeout(30)
+        ->get($scriptUrl . '?action=searchPengunjung&no_id=' . $request->no_id);
 
         if ($response->successful()) {
             return response()->json($response->json());
         }
-        
-        return response()->json(['status' => 'error', 'message' => 'Google Script merespon dengan error'], 500);
+
+        // Jika gagal, kita tangkap body error-nya untuk debug
+        return response()->json([
+            'status' => 'error', 
+            'message' => 'Server Google tidak merespon.',
+            'debug' => $response->body() 
+        ], 500);
 
     } catch (\Exception $e) {
-        return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
+        return response()->json([
+            'status' => 'error', 
+            'message' => 'Koneksi terputus: ' . $e->getMessage()
+        ], 500);
     }
 }
 
