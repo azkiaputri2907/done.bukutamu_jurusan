@@ -103,7 +103,7 @@
                             <div class="relative">
                                 <select name="asal_instansi" id="asal_instansi" required
                                     class="w-full px-4 py-3 rounded-xl border border-gray-300 bg-white text-gray-700 font-medium focus:ring-2 focus:ring-purple-400 focus:border-purple-400 outline-none transition-all appearance-none cursor-pointer shadow-sm">
-                                    <option value="" selected disabled>-- Pilih Program Studi / Asal --</option>
+                                    <option value="" selected disabled>-- Pilih Program Studi / Instansi Asal --</option>
                                     
                                     @foreach($master_prodi as $mp)
                                         <option value="{{ $mp->nama }}">{{ $mp->nama }}</option>
@@ -120,24 +120,27 @@
                         <div class="md:col-span-2">
                             <label class="block text-sm font-semibold text-gray-700 mb-2">Keperluan Kunjungan <span class="text-pink-500">*</span></label>
                             <div class="relative">
-                                <select name="keperluan" id="keperluan" required onchange="toggleKeperluanLainnya()"
-                                    class="w-full px-4 py-3 rounded-xl border border-gray-300 bg-white text-gray-700 font-medium focus:ring-2 focus:ring-purple-400 focus:border-purple-400 outline-none transition-all appearance-none cursor-pointer shadow-sm">
-                                    
-                                    <option value="" selected disabled>-- Pilih Keperluan --</option>
+<select name="keperluan" id="keperluan" required onchange="toggleKeperluanLainnya()"
+    class="w-full px-4 py-3 rounded-xl border border-gray-300 bg-white text-gray-700 font-medium focus:ring-2 focus:ring-purple-400 focus:border-purple-400 outline-none transition-all appearance-none cursor-pointer shadow-sm">
+    
+    <option value="" selected disabled>-- Pilih Keperluan --</option>
 
-                                    {{-- Loop data dari Google Sheets / Fallback --}}
-                                    @if(isset($keperluan_master) && count($keperluan_master) > 0)
-                                        @foreach($keperluan_master as $k)
-                                            {{-- Mencegah duplikasi opsi 'Lainnya' --}}
-                                            @if(strtolower(trim($k->keterangan)) !== 'lainnya')
-                                                <option value="{{ $k->keterangan }}">{{ $k->keterangan }}</option>
-                                            @endif
-                                        @endforeach
-                                    @endif
+    @if(!empty($keperluan_master))
+        @foreach($keperluan_master as $k)
+            @php
+                // Karena data dari Sheets bisa berupa array asosiatif
+                $item = (object) $k; 
+                $teks = $item->keterangan ?? ($item->Keterangan ?? null);
+            @endphp
 
-                                    {{-- Hardcode opsi Lainnya untuk trigger JS --}}
-                                    <option value="Lainnya">Lainnya (Sebutkan...)</option>
-                                </select>
+            @if($teks && strtolower(trim($teks)) !== 'lainnya')
+                <option value="{{ $teks }}">{{ $teks }}</option>
+            @endif
+        @endforeach
+    @endif
+
+    <option value="Lainnya">Lainnya (Sebutkan...)</option>
+</select>
                                 <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-gray-500">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                 </div>
@@ -255,9 +258,8 @@
             if (value.startsWith('C01')) selectInstansi.val('D3 Teknik Listrik');
             else if (value.startsWith('C02')) selectInstansi.val('D3 Teknik Elektronika');
             else if (value.startsWith('C03')) selectInstansi.val('D3 Teknik Informatika');
-            else if (value.startsWith('C04')) selectInstansi.val('D4 Teknologi Rekayasa Otomasi');
-            else if (value.startsWith('C05')) selectInstansi.val('D4 Sistem Informasi Kota Cerdas');
-            else if (value.startsWith('C06')) selectInstansi.val('D4 Teknologi Rekayasa Pembangkit Energi');
+            else if (value.startsWith('C04')) selectInstansi.val('Sarjana Terapan Teknologi Rekayasa Pembangkit Energi');
+            else if (value.startsWith('C05')) selectInstansi.val('Sarjana Terapan Sistem Informasi Kota Cerdas');
             else if (/^\d/.test(value)) selectInstansi.val('Lainnya / Instansi Luar');
         });
 

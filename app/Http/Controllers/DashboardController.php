@@ -161,8 +161,8 @@ public function survey(Request $request)
         'D3 Teknik Listrik', 
         'D3 Teknik Elektronika', 
         'D3 Teknik Informatika', 
-        'D4 Teknologi Rekayasa Pembangkit Energi', 
-        'D4 Sistem Informasi Kota Cerdas', 
+        'Sarjana Terapan Teknologi Rekayasa Pembangkit Energi', 
+        'Sarjana Terapan Sistem Informasi Kota Cerdas', 
         'Lainnya (Umum/Tamu Luar)'
     ];
 
@@ -337,9 +337,8 @@ public function laporan()
         ['nama' => 'D3 Teknik Listrik', 'jenis' => 'Prodi'],
         ['nama' => 'D3 Teknik Elektronika', 'jenis' => 'Prodi'],
         ['nama' => 'D3 Teknik Informatika', 'jenis' => 'Prodi'],
-        ['nama' => 'D4 Teknologi Rekayasa Otomasi', 'jenis' => 'Prodi'],
-        ['nama' => 'D4 Sistem Informasi Kota Cerdas', 'jenis' => 'Prodi'],
-        ['nama' => 'D4 Teknologi Rekayasa Pembangkit Energi', 'jenis' => 'Prodi'],
+        ['nama' => 'Sarjana Terapan Teknologi Rekayasa Pembangkit Energi', 'jenis' => 'Prodi'],
+        ['nama' => 'Sarjana Terapan Sistem Informasi Kota Cerdas', 'jenis' => 'Prodi'],
         ['nama' => 'Instansi Luar / Umum', 'jenis' => 'Instansi'],
     ])->map(function($item) {
         // Kita ubah ke object agar pemanggilan di View tetap menggunakan $p->nama

@@ -53,8 +53,7 @@
                             <p class="text-[10px] text-gray-400 uppercase font-black">Waktu</p>
                             {{-- Variabel Code 1 --}}
                             <p class="text-sm font-semibold text-gray-700">
-                                {{ $kunjungan->hari_kunjungan }}, {{ \Carbon\Carbon::parse($kunjungan->tanggal)->format('d F Y') }}
-                            </p>
+                                {{ $kunjungan->hari_kunjungan }}, {{ \Carbon\Carbon::parse($kunjungan->tanggal)->locale('id')->isoFormat('D MMMM YYYY') }}                            </p>
                         </div>
                     </div>
 

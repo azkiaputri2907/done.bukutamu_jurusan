@@ -13,13 +13,13 @@
     </div>
 
     {{-- Tombol Tambah --}}
-    {{-- <button @click="addModalOpen = true" 
+    <button @click="addModalOpen = true" 
         class="group flex items-center gap-2 bg-gradient-to-r from-[#3366ff] to-[#a044ff] text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-blue-200 transition transform hover:scale-105 hover:shadow-xl">
         <div class="bg-white/20 p-1 rounded-md group-hover:rotate-90 transition duration-300">
             <i class="fas fa-plus text-xs"></i>
         </div>
         <span>Tambah Keperluan</span>
-    </button> --}}
+    </button>
 
     {{-- MODAL TAMBAH --}}
     <div x-show="addModalOpen" 
@@ -87,10 +87,10 @@
                             </button>
 
                             {{-- Tombol Edit --}}
-                            {{-- <button @click="editModalOpen = true" title="Edit Data"
+                            <button @click="editModalOpen = true" title="Edit Data"
                                 class="group w-9 h-9 rounded-xl bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all duration-300 flex items-center justify-center shadow-sm">
                                 <i class="fas fa-edit text-xs group-hover:scale-110"></i>
-                            </button> --}}
+                            </button>
 
                             {{-- Tombol Hapus --}}
                             <button type="button" onclick="confirmDelete('{{ $k->id }}', '{{ $k->keterangan }}')" title="Hapus Data"

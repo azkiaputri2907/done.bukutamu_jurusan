@@ -47,24 +47,24 @@ public function index() {
 
         // Jika Sheets kosong/error, sediakan fallback (pilihan darurat)
         // 2. FALLBACK: Jika Sheets kosong/error/koneksi putus
-        if (empty($keperluan_master)) {
-            $keperluan_master = [
-                (object)['keterangan' => 'Legalisir Ijazah'],
-                (object)['keterangan' => 'Konsultasi Akademik'],
-                (object)['keterangan' => 'Pengajuan Judul TA'],
-                (object)['keterangan' => 'Tamu Dinas / Instansi Luar'],
-                (object)['keterangan' => 'Peminjaman Laboratorium'],
-                (object)['keterangan' => 'Urusan Administrasi Jurusan']
-                // Jangan masukkan 'Lainnya' disini jika di View sudah di-hardcode
-            ];
-        }
+        // if (empty($keperluan_master)) {
+        //     $keperluan_master = [
+        //         (object)['keterangan' => 'Legalisir Ijazah'],
+        //         (object)['keterangan' => 'Konsultasi Akademik'],
+        //         (object)['keterangan' => 'Pengajuan Judul TA'],
+        //         (object)['keterangan' => 'Tamu Dinas / Instansi Luar'],
+        //         (object)['keterangan' => 'Peminjaman Laboratorium'],
+        //         (object)['keterangan' => 'Urusan Administrasi Jurusan']
+        //         // Jangan masukkan 'Lainnya' disini jika di View sudah di-hardcode
+        //     ];
+        // }
 
         $master_prodi = [
             (object)['nama' => 'D3 Teknik Listrik', 'jenis' => 'Prodi'],
             (object)['nama' => 'D3 Teknik Elektronika', 'jenis' => 'Prodi'],
             (object)['nama' => 'D3 Teknik Informatika', 'jenis' => 'Prodi'],
-            (object)['nama' => 'D4 Teknologi Rekayasa Pembangkit Energi', 'jenis' => 'Prodi'],
-            (object)['nama' => 'D4 Sistem Informasi Kota Cerdas', 'jenis' => 'Prodi'],
+            (object)['nama' => 'Sarjana Terapan Teknologi Rekayasa Pembangkit Energi', 'jenis' => 'Prodi'],
+            (object)['nama' => 'Sarjana Terapan Sistem Informasi Kota Cerdas', 'jenis' => 'Prodi'],
             (object)['nama' => 'Lainnya (Umum/Tamu Luar)', 'jenis' => 'Umum']
         ];
 
@@ -190,11 +190,11 @@ public function check(Request $request)
         $nama_tamu = session('nama_tamu', 'Tamu');
 
         $pertanyaan = [
-            'Kecepatan Pelayanan' => [(object)['id' => 1, 'pertanyaan' => 'Bagaimana kecepatan petugas dalam memberikan pelayanan?']],
-            'Sikap Petugas'       => [(object)['id' => 2, 'pertanyaan' => 'Bagaimana keramahan dan kesopanan petugas saat melayani?']],
-            'Kualitas Informasi'  => [(object)['id' => 3, 'pertanyaan' => 'Apakah petugas memberikan informasi atau solusi yang jelas?']],
+            'Kecepatan Pelayanan' => [(object)['id' => 1, 'pertanyaan' => 'Bagaimana kecepatan admin dalam memberikan pelayanan?']],
+            'Sikap Admin'       => [(object)['id' => 2, 'pertanyaan' => 'Bagaimana penerapan budaya 5S (Senyum, Sapa, Salam, Sopan, Santun) admin saat melayani?']],
+            'Kualitas Informasi'  => [(object)['id' => 3, 'pertanyaan' => 'Apakah admin memberikan informasi atau solusi yang jelas?']],
             'Sarana & Prasarana'  => [(object)['id' => 4, 'pertanyaan' => 'Bagaimana kenyamanan dan kebersihan fasilitas pelayanan?']],
-            'Kepuasan Umum'       => [(object)['id' => 5, 'pertanyaan' => 'Seberapa puas Anda dengan pelayanan kami secara keseluruhan?']],
+            'Kepuasan Umum'       => [(object)['id' => 5, 'pertanyaan' => 'Seberapa puas kamu dengan pelayanan admin secara keseluruhan?']],
         ];
 
         $kunjungan = (object)['id' => $id];
@@ -240,43 +240,31 @@ public function check(Request $request)
         }
     }
 
-private function fetchSheetsData($sheetName = 'master_keperluan')
-    {
-        try {
-            $scriptUrl = env('GOOGLE_SCRIPT_URL');
+public function fetchSheetsData($sheetName)
+{
+    try {
+        // Ambil URL dari .env
+        $baseUrl = env('GOOGLE_SHEET_ENDPOINT');
+
+        // Panggil dengan parameter yang dibutuhkan Apps Script kamu
+        $response = Http::withoutVerifying()->get($baseUrl, [
+            'action' => 'read',
+            'sheet'  => $sheetName
+        ]);
+
+        if ($response->successful()) {
+            $result = $response->json();
             
-            if (!$scriptUrl) {
-                Log::warning("GOOGLE_SCRIPT_URL belum diset di .env");
-                return [];
+            // Berdasarkan Apps Script kamu, data ada di dalam key 'data'
+            if (isset($result['status']) && $result['status'] === 'success') {
+                return $result['data'];
             }
-
-            $response = Http::timeout(5)->get($scriptUrl, [
-                'action' => 'read',
-                'sheet'  => $sheetName
-            ]);
-
-            if ($response->successful()) {
-                $json = $response->json();
-                $rows = $json['data'] ?? []; // Asumsi format JSON: { "data": [ ["id", "ket"], ... ] }
-                $result = [];
-
-                foreach ($rows as $index => $row) {
-                    // Skip Header (index 0)
-                    if ($index === 0) continue;
-                    
-                    // Pastikan row memiliki data keterangan (index 1)
-                    if (!empty($row[1])) {
-                        $result[] = (object) [
-                            'id' => $row[0] ?? uniqid(),
-                            'keterangan' => trim($row[1]) // Trim spasi berlebih
-                        ];
-                    }
-                }
-                return $result;
-            }
-        } catch (\Exception $e) {
-            Log::error("Gagal fetch $sheetName: " . $e->getMessage());
         }
+        
+        return [];
+    } catch (\Exception $e) {
+        // Log error jika perlu: \Log::error($e->getMessage());
         return [];
     }
+}
 }

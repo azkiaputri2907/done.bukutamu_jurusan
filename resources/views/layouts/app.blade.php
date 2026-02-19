@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     
-    <title>Buku Tamu ELektro</title>
+    <title>Buku Tamu Elektro</title>
 
     {{-- TAMBAHKAN LOGO DISINI (Favicon) --}}
     <link rel="shortcut icon" href="{{ asset('images/logo_poliban.png') }}" type="image/x-icon">
