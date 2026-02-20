@@ -2,17 +2,17 @@
 
 @section('content')
 
-{{-- Header Section --}}
+{{-- SweetAlert2 CDN --}}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <div class="mb-6">
     <h2 class="text-2xl font-extrabold text-gray-800 tracking-tight">Laporan Sistem</h2>
     <p class="text-sm text-gray-500 font-medium">Ekspor data riwayat kunjungan dan hasil survei ke format Excel atau PDF.</p>
 </div>
 
 <div class="max-w-2xl">
-    {{-- Card Utama --}}
     <div class="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
         
-        {{-- Card Header dengan Gradien --}}
         <div class="bg-gradient-to-r from-gray-50 to-white px-8 py-6 border-b border-gray-100">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-[#a044ff]">
@@ -25,16 +25,13 @@
             </div>
         </div>
 
-        {{-- Form Body --}}
         <div class="p-8">
-            <form action="{{ route('admin.laporan.export') }}" method="POST">
+            {{-- Gunakan ID yang jelas --}}
+            <form id="exportForm" action="{{ route('admin.laporan.export') }}" method="POST">
                 @csrf
                 
                 <div class="space-y-6">
-                    
-                    {{-- Row 1: Jenis Laporan & Filter Prodi --}}
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {{-- Input Jenis Laporan --}}
                         <div>
                             <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">Jenis Data</label>
                             <select name="jenis" required 
@@ -45,7 +42,6 @@
                             </select>
                         </div>
 
-                        {{-- Input Filter Prodi --}}
                         <div>
                             <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">Filter Program Studi</label>
                             <div class="relative">
@@ -60,7 +56,6 @@
                         </div>
                     </div>
 
-                    {{-- Row 2: Format File (Full Width) --}}
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">Format Output</label>
                         <div class="grid grid-cols-2 gap-4">
@@ -81,16 +76,13 @@
                         </div>
                     </div>
 
-                    {{-- Row 3: Baris Tanggal --}}
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {{-- Dari Tanggal --}}
                         <div>
                             <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">🗓️ Dari Tanggal</label>
                             <input type="date" name="tgl_mulai" required 
                                    class="w-full px-4 py-3 bg-gray-50 border-gray-200 rounded-xl text-sm font-medium text-gray-700 focus:ring-2 focus:ring-[#a044ff] focus:bg-white transition">
                         </div>
 
-                        {{-- Sampai Tanggal --}}
                         <div>
                             <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">⌛ Sampai Tanggal</label>
                             <input type="date" name="tgl_selesai" required 
@@ -98,34 +90,46 @@
                         </div>
                     </div>
 
-                    {{-- Tombol Submit --}}
                     <div class="pt-4">
-                        <button type="submit" 
+                        {{-- Ubah type menjadi button agar kita kendalikan sepenuhnya lewat JS --}}
+                        <button type="button" onclick="handleExport()"
                                 class="group w-full flex items-center justify-center gap-3 bg-gradient-to-r from-[#3366ff] to-[#a044ff] text-white px-6 py-4 rounded-2xl font-bold shadow-lg shadow-blue-100 hover:shadow-xl hover:scale-[1.02] active:scale-95 transition-all duration-300">
-                            <i class="fas fa-cloud-download-alt group-hover:bounce"></i>
+                            <i class="fas fa-cloud-download-alt"></i>
                             <span>Generate & Download Laporan</span>
                         </button>
                     </div>
-
-                </div> {{-- End Space-y-6 --}}
+                </div>
             </form>
-        </div>
-
-        {{-- Card Footer --}}
-        <div class="bg-blue-50/50 px-8 py-4 border-t border-gray-100">
-            <div class="flex items-start gap-2 text-blue-600">
-                <i class="fas fa-info-circle text-xs mt-1"></i>
-                <p class="text-[11px] font-medium leading-relaxed">
-                    Pilih format <b>Excel</b> jika Anda ingin mengolah data lebih lanjut (sortir/filter manual), atau pilih <b>PDF</b> untuk laporan resmi siap cetak dengan tanda tangan.
-                </p>
-            </div>
         </div>
     </div>
 </div>
 
+{{-- SCRIPT PERBAIKAN --}}
+<script>
+    function handleExport() {
+        const form = document.getElementById('exportForm');
+        
+        // 1. Tampilkan Pop-up dulu
+        Swal.fire({
+            title: 'Menyiapkan Laporan',
+            html: 'Data sedang diproses. Unduhan akan segera dimulai...',
+            timer: 5000,
+            timerProgressBar: true,
+            didOpen: () => {
+                Swal.showLoading();
+            },
+            showConfirmButton: false,
+            allowOutsideClick: false
+        });
+
+        // 2. Kirim Form secara manual tepat setelah pop-up muncul
+        // Ini menjamin form terkirim di klik pertama
+        form.submit();
+    }
+</script>
+
 @endsection
 
-{{-- CSS Animasi --}}
 <style>
     @keyframes bounce {
         0%, 100% { transform: translateY(0); }
