@@ -264,18 +264,24 @@
             setTimeout(() => modal.classList.add('hidden'), 300);
         };
 
-        // --- 3. AUTO DETECT PRODI ---
-        // Pastikan value .val() disini SAMA PERSIS dengan opsi di $master_prodi Controller
+        // --- 3. AUTO DETECT PRODI & AUTO UPPERCASE NIM ---
         $('#identitas_no').on('input', function() {
-            let value = $(this).val().trim().toUpperCase();
+            // 1. Ambil value dan paksa jadi Uppercase
+            let value = $(this).val().toUpperCase();
+            
+            // 2. Masukkan kembali value yang sudah kapital ke dalam input
+            $(this).val(value);
+
+            // 3. Logika Auto Detect Prodi (Tetap dipertahankan)
+            let trimmedValue = value.trim();
             let selectInstansi = $('#asal_instansi');
 
-            if (value.startsWith('C01')) selectInstansi.val('D3 Teknik Listrik');
-            else if (value.startsWith('C02')) selectInstansi.val('D3 Teknik Elektronika');
-            else if (value.startsWith('C03')) selectInstansi.val('D3 Teknik Informatika');
-            else if (value.startsWith('C04')) selectInstansi.val('Sarjana Terapan Teknologi Rekayasa Pembangkit Energi');
-            else if (value.startsWith('C05')) selectInstansi.val('Sarjana Terapan Sistem Informasi Kota Cerdas');
-            else if (/^\d/.test(value)) selectInstansi.val('Lainnya / Instansi Luar');
+            if (trimmedValue.startsWith('C01')) selectInstansi.val('D3 Teknik Listrik');
+            else if (trimmedValue.startsWith('C02')) selectInstansi.val('D3 Teknik Elektronika');
+            else if (trimmedValue.startsWith('C03')) selectInstansi.val('D3 Teknik Informatika');
+            else if (trimmedValue.startsWith('C04')) selectInstansi.val('Sarjana Terapan Teknologi Rekayasa Pembangkit Energi');
+            else if (trimmedValue.startsWith('C05')) selectInstansi.val('Sarjana Terapan Sistem Informasi Kota Cerdas');
+            else if (/^\d/.test(trimmedValue)) selectInstansi.val('Lainnya / Instansi Luar');
         });
 
         // --- 4. CEK DATA LOGIC ---
