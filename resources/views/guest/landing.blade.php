@@ -7,6 +7,13 @@
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
     body { font-family: 'Plus Jakarta Sans', sans-serif; }
+
+    /* CSS Tambahan untuk Efek Mengetik */
+    #typewriter {
+        display: inline-block;
+        border-right: 3px solid rgba(219, 234, 254, 0.8); /* Kursor */
+        padding-right: 5px;
+    }
 </style>
 
 <div class="min-h-screen bg-white font-sans text-gray-800 antialiased overflow-x-hidden">
@@ -33,7 +40,8 @@
             <div class="text-white space-y-6 text-center lg:text-left order-1">
                 <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-extrabold leading-[1.1] tracking-tight">
                     Buku Tamu <br> 
-                    <span class="opacity-80 text-blue-100 italic">Digital</span>
+                    {{-- MODIFIKASI: Span dengan ID Typewriter --}}
+                    <span id="typewriter" class="opacity-80 text-blue-100 italic min-h-[1em]"></span>
                 </h1>
                 
                 <p class="max-w-2xl mx-auto lg:mx-0 opacity-90 leading-relaxed text-sm sm:text-base md:text-xl text-blue-50">
@@ -281,4 +289,45 @@
         </div>
     </footer>
 </div>
+
+{{-- SCRIPT EFEK MENGETIK --}}
+<script>
+    const textElement = document.getElementById('typewriter');
+    const textToType = "Digital";
+    let index = 0;
+    let isDeleting = false;
+    let speed = 200;
+
+    function type() {
+        const currentText = textToType.slice(0, index);
+        textElement.innerText = currentText;
+
+        if (!isDeleting && index < textToType.length) {
+            index++;
+            speed = 200; // Kecepatan mengetik
+        } else if (isDeleting && index > 0) {
+            index--;
+            speed = 100; // Kecepatan menghapus
+        } else {
+            // Jeda di akhir kata atau saat kosong
+            isDeleting = !isDeleting;
+            speed = isDeleting ? 2000 : 500; 
+        }
+
+        setTimeout(type, speed);
+    }
+
+    document.addEventListener('DOMContentLoaded', type);
+</script>
+
 @endsection
+
+<style>
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-4px); }
+    }
+    .group:hover .fa-cloud-download-alt {
+        animation: bounce 0.8s infinite;
+    }
+</style>
