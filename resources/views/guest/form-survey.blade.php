@@ -13,11 +13,29 @@
     <div class="max-w-4xl w-full bg-white/95 backdrop-blur-md rounded-[2rem] shadow-2xl overflow-hidden border border-white/20">
         
         {{-- Banner Top --}}
-        <div class="bg-blue-50/50 border-b border-blue-100 p-6 text-center">
-            <div class="inline-flex items-center justify-center space-x-8 text-xs md:text-sm text-gray-500 font-medium uppercase tracking-wider">
-                <div class="flex items-center"><span class="w-6 h-6 rounded-full border-2 border-red-300 bg-red-50 text-red-500 flex items-center justify-center mr-2 font-bold">1</span> Sangat Buruk</div>
-                <div class="w-12 h-px bg-gray-300"></div>
-                <div class="flex items-center"><span class="w-6 h-6 rounded-full border-2 border-green-300 bg-green-50 text-green-500 flex items-center justify-center mr-2 font-bold">5</span> Sangat Baik</div>
+        <div class="bg-blue-50/50 border-b border-blue-100 p-6">
+            <p class="text-center text-gray-600 font-bold text-sm mb-4 uppercase tracking-widest">Keterangan Penilaian</p>
+            <div class="grid grid-cols-5 gap-2 max-w-2xl mx-auto text-[10px] md:text-xs font-bold text-center">
+                <div class="flex flex-col items-center gap-1 text-red-500">
+                    <span class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-lg">1</span>
+                    <span>Sangat Buruk</span>
+                </div>
+                <div class="flex flex-col items-center gap-1 text-orange-500">
+                    <span class="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-lg">2</span>
+                    <span>Buruk</span>
+                </div>
+                <div class="flex flex-col items-center gap-1 text-yellow-600">
+                    <span class="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center text-lg">3</span>
+                    <span>Cukup</span>
+                </div>
+                <div class="flex flex-col items-center gap-1 text-blue-500">
+                    <span class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-lg">4</span>
+                    <span>Baik</span>
+                </div>
+                <div class="flex flex-col items-center gap-1 text-green-500">
+                    <span class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-lg">5</span>
+                    <span>Sangat Baik</span>
+                </div>
             </div>
         </div>
 
@@ -47,24 +65,37 @@
                                 <p class="text-gray-700 font-medium leading-relaxed">{{ $q->pertanyaan }}</p>
                             </div>
 
-                            {{-- Pilihan Skor (Radio Buttons) --}}
-                            <div class="flex items-center justify-between md:justify-end gap-2 md:gap-3 min-w-[200px]">
-                                @for($i = 1; $i <= 5; $i++)
+                            {{-- Pilihan Skor (Emoji Radio Buttons) --}}
+                            <div class="flex items-center justify-between md:justify-end gap-2 md:gap-4 min-w-[220px]">
+                                @php
+                                    $emojis = [
+                                        1 => ['icon' => '😠', 'label' => 'Sgt. Buruk', 'color' => 'peer-checked:bg-red-500'],
+                                        2 => ['icon' => '☹️', 'label' => 'Buruk', 'color' => 'peer-checked:bg-orange-500'],
+                                        3 => ['icon' => '😐', 'label' => 'Cukup', 'color' => 'peer-checked:bg-yellow-500'],
+                                        4 => ['icon' => '🙂', 'label' => 'Baik', 'color' => 'peer-checked:bg-blue-500'],
+                                        5 => ['icon' => '🤩', 'label' => 'Sgt. Baik', 'color' => 'peer-checked:bg-green-500'],
+                                    ];
+                                @endphp
+
+                                @foreach($emojis as $value => $data)
                                     <label class="relative cursor-pointer group">
-                                        {{-- Gunakan ID pertanyaan sebagai key array --}}
-                                        <input type="radio" name="jawaban[{{ $q->id }}]" value="{{ $i }}" class="peer sr-only" required>
+                                        <input type="radio" name="jawaban[{{ $q->id }}]" value="{{ $value }}" class="peer sr-only" required>
                                         
-                                        <div class="w-10 h-10 md:w-11 md:h-11 rounded-full border-2 border-gray-200 bg-white text-gray-400 flex items-center justify-center font-bold text-sm md:text-base transition-all duration-200 
-                                            group-hover:border-purple-300 group-hover:scale-105
-                                            peer-checked:border-purple-600 peer-checked:bg-purple-600 peer-checked:text-white peer-checked:scale-110 peer-checked:shadow-lg">
-                                            {{ $i }}
-                                        </div>
+                                        <div class="w-12 h-12 md:w-14 md:h-14 rounded-2xl border border-gray-200 bg-white/50 backdrop-blur-sm flex items-center justify-center transition-all duration-300 
+    group-hover:border-purple-400 group-hover:bg-white
+    peer-checked:border-transparent {{ $data['color'] }} peer-checked:text-white peer-checked:scale-110 peer-checked:shadow-xl">
+    
+    <span class="text-2xl md:text-3xl">
+        {{ $data['icon'] }}
+    </span>
+</div>
                                         
-                                        <span class="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-[10px] text-purple-600 font-bold opacity-0 peer-checked:opacity-100 transition-opacity whitespace-nowrap">
-                                            @if($i==1) Buruk @elseif($i==5) Puas @endif
+                                        {{-- Label kecil di bawah emoji saat terpilih --}}
+                                        <span class="absolute -bottom-5 left-1/2 transform -translate-x-1/2 text-[9px] font-bold text-gray-500 opacity-0 peer-checked:opacity-100 transition-opacity whitespace-nowrap uppercase">
+                                            {{ $data['label'] }}
                                         </span>
                                     </label>
-                                @endfor
+                                @endforeach
                             </div>
                         </div>
                     </div>
