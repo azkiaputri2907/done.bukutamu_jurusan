@@ -116,6 +116,21 @@
                             </div>
                         </div>
 
+                        {{-- TAMBAHAN: Nomor Telepon --}}
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Nomor WhatsApp / Telepon <span class="text-pink-500">*</span></label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-4 text-green-500">
+                                    <i class="fab fa-whatsapp text-xl"></i>
+                                </div>
+                                <input name="no_telpon" id="no_telpon" type="tel" required 
+                                    placeholder="Contoh: 081234567890" 
+                                    oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                    class="w-full pl-12 px-4 py-3 rounded-xl border border-gray-300 bg-white text-gray-800 focus:ring-2 focus:ring-purple-400 focus:border-purple-400 outline-none transition-all shadow-sm">
+                            </div>
+                            <p class="text-[10px] text-gray-500 mt-1 ml-1">*Pastikan nomor aktif untuk koordinasi lebih lanjut.</p>
+                        </div>    
+
                         {{-- MODIFIED: Keperluan (Filter Duplicate Lainnya) --}}
                         <div class="md:col-span-2">
                             <label class="block text-sm font-semibold text-gray-700 mb-2">Keperluan Kunjungan <span class="text-pink-500">*</span></label>
@@ -291,10 +306,17 @@
                     if(dataPengunjung && dataPengunjung.nama_lengkap) {
                         $('#nama_lengkap').val(dataPengunjung.nama_lengkap);
                         $('#asal_instansi').val(dataPengunjung.asal_instansi);
+                        
+                        // TAMBAHKAN INI agar No Telpon terisi otomatis jika ada di database
+                        if(dataPengunjung.no_telpon) {
+                            $('#no_telpon').val(dataPengunjung.no_telpon);
+                        }
+                        
                         showModal('Berhasil!', `Data ditemukan. Halo, ${dataPengunjung.nama_lengkap}.`, 'success');
                     } else {
                         $('#nama_lengkap').val('').focus();
-                        showModal('Pengunjung Baru', 'Identitas belum ada di sistem. Silakan isi nama secara manual.', 'info');
+                        // Jangan hapus no_telpon jika user mungkin sudah mengetiknya duluan
+                        showModal('Pengunjung Baru', 'Identitas belum ada di sistem. Silakan isi data secara manual.', 'info');
                     }
                 },
                 error: function(xhr) {

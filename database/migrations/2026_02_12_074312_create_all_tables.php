@@ -71,7 +71,8 @@ return new class extends Migration
         $table->id();
         $table->string('identitas_no')->unique(); 
         $table->string('nama_lengkap');
-        $table->string('asal_instansi'); 
+        $table->string('asal_instansi');
+        $table->string('no_telpon')->nullable(); 
         $table->date('created_at')->nullable(); // Ubah ke date
         $table->date('updated_at')->nullable(); // Ubah ke date
     });
@@ -82,7 +83,6 @@ return new class extends Migration
         $table->string('nomor_kunjungan')->unique(); 
         $table->foreignId('pengunjung_id')->constrained('pengunjung')->onDelete('cascade');
         $table->string('keperluan'); 
-        $table->text('detail_keperluan')->nullable();
         $table->string('hari_kunjungan');
         $table->date('tanggal'); // Ini sudah date
         $table->date('created_at')->nullable();

@@ -8,7 +8,7 @@ class Kunjungan extends Model
 {
     protected $table = 'kunjungan';
     // nomor_kunjungan tidak masuk fillable karena diisi oleh Trigger MySQL
-    protected $fillable = ['pengunjung_id', 'keperluan', 'detail_keperluan', 'hari_kunjungan', 'tanggal'];
+    protected $fillable = ['pengunjung_id', 'keperluan', 'hari_kunjungan', 'tanggal'];
 
     // Tambahkan ini di dalam setiap class Model
 protected $dateFormat = 'Y-m-d';

@@ -86,6 +86,20 @@
                             <p class="text-sm font-semibold text-gray-700">{{ $kunjungan->pengunjung->asal_instansi }}</p>
                         </div>
                     </div>
+                    
+                    {{-- TAMBAHAN: Item 6: Nomor Telepon --}}
+                    <div class="flex items-center p-4 bg-gray-50/80 rounded-xl border border-gray-100">
+                        <div class="mr-4 text-green-500">
+                            {{-- Icon Phone/WA --}}
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-gray-400 uppercase font-black">Nomor WhatsApp / Telepon</p>
+                            <p class="text-sm font-semibold text-gray-700">{{ $kunjungan->pengunjung->no_telpon ?? '-' }}</p>
+                        </div>
+                    </div>
 
                     {{-- Item 5: Keperluan --}}
                     <div class="flex items-start p-4 bg-gray-50/80 rounded-xl border border-gray-100">

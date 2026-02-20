@@ -114,6 +114,7 @@ public function check(Request $request)
             'identitas_no' => 'required',
             'nama_lengkap' => 'required',
             'asal_instansi' => 'required',
+            'no_telpon'     => 'required',
             'keperluan'    => 'required', 
         ]);
 
@@ -141,7 +142,8 @@ public function check(Request $request)
                     $request->identitas_no, 
                     $request->nama_lengkap, 
                     $request->asal_instansi, 
-                    $today
+                    $today,
+                    $request->no_telpon
                 ]
             ]);
 
@@ -152,6 +154,7 @@ public function check(Request $request)
                 'nama_lengkap'   => $request->nama_lengkap,
                 'identitas_no'   => $request->identitas_no,
                 'asal_instansi'  => $request->asal_instansi,
+                'no_telpon'      => $request->no_telpon,
             ];
 
             return redirect()->route('guest.konfirmasi', ['id' => $nomorKunjungan])
@@ -177,6 +180,7 @@ public function check(Request $request)
                 'nama_lengkap' => $data['nama_lengkap'] ?? session('nama_tamu', 'Tamu'),
                 'identitas_no' => $data['identitas_no'] ?? '-',
                 'asal_instansi' => $data['asal_instansi'] ?? '-',
+                'no_telpon'     => $data['no_telpon'] ?? '-',
             ]
         ];
 
