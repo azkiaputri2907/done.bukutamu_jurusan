@@ -188,36 +188,37 @@
 
                             <td class="px-6 py-4" x-data="{ editModalOpen: false, viewModalOpen: false }"> {{-- x-data digabung di sini --}}
                                 <div class="flex justify-center items-center gap-2">
-                                    
-                                {{-- Tombol View (Semua Role Bisa Lihat) --}}
-                                        <button @click="viewModalOpen = true" title="Lihat Detail" 
-                                            class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-600 hover:text-white transition-all duration-300 shadow-sm flex items-center justify-center">
-                                            <i class="fas fa-eye text-xs"></i>
-                                        </button>
 
-                                        @php
-                                            $user = session('user');
-                                            $roleId = (int)($user['role_id'] ?? 0);
-                                            $userProdiId = (int)($user['prodi_id'] ?? 0);
-                                            
-                                            // Logika Akses:
-                                            // 1. Super Admin (Role 1) & Kajur (Role 2) bisa hapus semua
-                                            // 2. Admin Prodi (Role 3) hanya bisa hapus jika prodi_id di data survey cocok
-                                            // Catatan: Pastikan di Controller Anda sudah menyertakan 'prodi_id' dalam object $s
-                                            $canDelete = ($roleId === 1 || $roleId === 2) || ($roleId === 3 && $userProdiId == ($s->prodi_id ?? 0));
-                                        @endphp
+@php
+    $user = session('user');
+    $roleId = (int)($user['role_id'] ?? 0);
+    $userProdiId = (int)($user['prodi_id'] ?? 0);
+    
+    // LOGIKA TERBARU:
+    // 1. Super Admin (Role 1) bisa hapus SEMUA data.
+    // 2. Admin Prodi (Role 3) hanya bisa hapus jika prodi_id data survey cocok dengan prodi_id user.
+    // 3. Kajur (Role 2) TIDAK disertakan di sini, sehingga otomatis tidak bisa hapus.
+    
+    $canDelete = ($roleId === 1) || ($roleId === 3 && $userProdiId == ($s->prodi_id ?? 0));
+@endphp
 
-                                        @if($canDelete)
-                                            {{-- Tombol Delete --}}
-                                            <form id="delete-form-{{ $loop->index }}" action="{{ route('admin.survey.destroy') }}" method="POST" class="inline">
-                                                @csrf @method('DELETE')
-                                                <input type="hidden" name="id_kunjungan" value="{{ $s->id_kunjungan }}">
-                                                <button type="button" onclick="confirmDelete('{{ $loop->index }}', '{{ $s->nama_tamu }}')" 
-                                                    class="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 border border-rose-100 hover:bg-rose-600 hover:text-white transition-all duration-300 shadow-sm flex items-center justify-center">
-                                                    <i class="fas fa-trash text-xs"></i>
-                                                </button>
-                                            </form>
-                                        @endif
+{{-- Tombol View (Semua Role Bisa Lihat) --}}
+<button @click="viewModalOpen = true" title="Lihat Detail" 
+    class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-600 hover:text-white transition-all duration-300 shadow-sm flex items-center justify-center">
+    <i class="fas fa-eye text-xs"></i>
+</button>
+
+@if($canDelete)
+    {{-- Tombol Delete --}}
+    <form id="delete-form-{{ $loop->index }}" action="{{ route('admin.survey.destroy') }}" method="POST" class="inline">
+        @csrf @method('DELETE')
+        <input type="hidden" name="id_kunjungan" value="{{ $s->id_kunjungan }}">
+        <button type="button" onclick="confirmDelete('{{ $loop->index }}', '{{ $s->nama_tamu }}')" 
+            class="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 border border-rose-100 hover:bg-rose-600 hover:text-white transition-all duration-300 shadow-sm flex items-center justify-center">
+            <i class="fas fa-trash text-xs"></i>
+        </button>
+    </form>
+@endif
                                     </div>
 
 {{-- --- MODAL VIEW (Detail Informasi) --- --}}

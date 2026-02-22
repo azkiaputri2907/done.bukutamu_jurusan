@@ -152,29 +152,36 @@
                     </td>
 
                     <td class="px-4 md:px-6 py-4">
-                        <div class="flex justify-center items-center gap-1.5 md:gap-2">
-                            {{-- Tombol Lihat (Semua Bisa) --}}
-                            <button @click="viewModalOpen = true" class="w-8 h-8 md:w-9 md:h-9 rounded-lg md:rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center">
-                                <i class="fas fa-eye text-[10px]"></i>
-                            </button>
+<div class="flex justify-center items-center gap-1.5 md:gap-2">
+        {{-- Tombol Lihat (Semua Role Bisa) --}}
+        <button @click="viewModalOpen = true" class="w-8 h-8 md:w-9 md:h-9 rounded-lg md:rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all">
+            <i class="fas fa-eye text-[10px]"></i>
+        </button>
 
-                            {{-- MODIFIKASI: Izinkan Role 1 (Super) dan Role Prodi lainnya untuk Edit & Hapus --}}
-                            @if(in_array((int)session('user')['role_id'], [1, 2, 3, 4, 5, 6]))
-                                {{-- Tombol Edit --}}
-                                <button @click="editModalOpen = true" class="w-8 h-8 md:w-9 md:h-9 rounded-lg md:rounded-xl bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center">
-                                    <i class="fas fa-edit text-[10px]"></i>
-                                </button>
+        {{-- Logika Hak Akses: Sembunyikan Edit & Hapus jika User adalah Kajur (Role 2) --}}
+        @php
+            $userRole = (int)session('user')['role_id'];
+            // Izinkan jika BUKAN Kajur (Asumsi Kajur = 2)
+            // Atau definisikan siapa saja yang boleh: Super Admin (1) dan Admin Prodi (3, 4, dst)
+            $canManage = in_array($userRole, [1, 3, 4, 5, 6]); 
+        @endphp
 
-                                {{-- Tombol Hapus --}}
-                                <form id="delete-form-{{ $row->nomor_kunjungan }}" action="{{ route('admin.kunjungan.destroy', $row->nomor_kunjungan) }}" method="POST" class="inline">
-                                    @csrf @method('DELETE')
-                                    <button type="button" onclick="confirmDelete('{{ $row->nomor_kunjungan }}', '{{ $row->nama_lengkap }}')"
-                                            class="w-8 h-8 md:w-9 md:h-9 rounded-lg md:rounded-xl bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center">
-                                        <i class="fas fa-trash text-[10px]"></i>
-                                    </button>
-                                </form>
-                            @endif
-                        </div>
+        @if($canManage)
+            {{-- Tombol Edit --}}
+            <button @click="editModalOpen = true" class="w-8 h-8 md:w-9 md:h-9 rounded-lg md:rounded-xl bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center hover:bg-amber-600 hover:text-white transition-all">
+                <i class="fas fa-edit text-[10px]"></i>
+            </button>
+
+            {{-- Tombol Hapus --}}
+            <form id="delete-form-{{ $row->nomor_kunjungan }}" action="{{ route('admin.kunjungan.destroy', $row->nomor_kunjungan) }}" method="POST" class="inline">
+                @csrf @method('DELETE')
+                <button type="button" onclick="confirmDelete('{{ $row->nomor_kunjungan }}', '{{ $row->nama_lengkap }}')"
+                        class="w-8 h-8 md:w-9 md:h-9 rounded-lg md:rounded-xl bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center hover:bg-rose-600 hover:text-white transition-all">
+                    <i class="fas fa-trash text-[10px]"></i>
+                </button>
+            </form>
+        @endif
+    </div>
 
                         {{-- MODAL VIEW DETAIL --}}
                         {{-- Modifikasi: max-w-sm di mobile, rounded lebih kecil sedikit --}}

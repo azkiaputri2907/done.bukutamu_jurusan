@@ -289,25 +289,28 @@ public function survey(Request $request)
     // --- DATA PENGUNJUNG ---
 public function pengunjung(Request $request)
 {
-    // 1. Ambil data user dari session untuk pengecekan Role
     $userSession = session('user');
     $roleId = (int)($userSession['role_id'] ?? 0);
     $prodiUser = $userSession['prodi_nama'] ?? '';
 
-    // 2. Ambil data dari Google Apps Script
-    $response = Http::get(env('GOOGLE_SCRIPT_URL'), ['action' => 'getAllData']);
+    $response = Http::withoutVerifying()->get(env('GOOGLE_SCRIPT_URL'), ['action' => 'getAllData']);
     $pengunjung = collect([]);
 
     if ($response->successful()) {
         $allData = $response->json()['data'] ?? [];
         $raw = $allData['pengunjung'] ?? [];
 
-        if (count($raw) > 1) {
-            array_shift($raw); // Hapus header row
-            
+        if (count($raw) > 0) {
+            // Cek jika baris pertama adalah header, jika ya maka buang
+            if (isset($raw[0][0]) && (strtolower($raw[0][0]) == 'id' || str_contains(strtolower($raw[0][0]), 'identitas'))) {
+                array_shift($raw);
+            }
+
             $pengunjung = collect($raw)->map(function ($row) {
-                // Parsing tanggal terakhir kunjungan
-                $terakhir = !empty($row[3]) ? \Carbon\Carbon::parse($row[3])->timezone('Asia/Makassar')->translatedFormat('d F Y') : '-';
+                // Mengikuti format yang Anda minta
+                $terakhir = !empty($row[3]) 
+                    ? \Carbon\Carbon::parse($row[3])->timezone('Asia/Makassar')->translatedFormat('d F Y') 
+                    : '-';
 
                 return (object)[
                     'identitas_no'       => $row[0] ?? '-',
@@ -317,23 +320,26 @@ public function pengunjung(Request $request)
                 ];
             });
 
-            // 3. LOGIKA PENGUNCIAN & FILTER PRODI
-            $selectedProdi = $request->prodi;
+            // --- LOGIKA FILTER AGAR KAJUR TIDAK KOSONG ---
+            
+            $selectedProdi = $request->query('prodi');
 
-            // Jika BUKAN Super Admin (Role != 1), PAKSA filter ke prodi user tersebut
-            if ($roleId !== 1) {
-                $selectedProdi = $prodiUser;
-            }
-
-            // Jalankan filter Prodi jika ada (baik dari request maupun paksaan session)
-            if ($selectedProdi) {
-                $pengunjung = $pengunjung->filter(function ($p) use ($selectedProdi) {
-                    // Cek jika asal_instansi cocok dengan prodi yang dipilih
-                    return strtolower($p->asal_instansi) === strtolower($selectedProdi);
+            if ($roleId === 1 || $roleId === 2) {
+                // Super Admin (1) dan Kajur (2) bisa melihat semua prodi.
+                // Filter hanya jalan jika mereka memilih prodi tertentu di dropdown.
+                if ($selectedProdi && $selectedProdi !== 'all') {
+                    $pengunjung = $pengunjung->filter(function ($p) use ($selectedProdi) {
+                        return strtolower(trim($p->asal_instansi)) === strtolower(trim($selectedProdi));
+                    });
+                }
+            } else {
+                // Selain Role 1 & 2 (misal Admin Prodi), paksa filter sesuai prodi mereka.
+                $pengunjung = $pengunjung->filter(function ($p) use ($prodiUser) {
+                    return strtolower(trim($p->asal_instansi)) === strtolower(trim($prodiUser));
                 });
             }
 
-            // 4. LOGIKA SEARCH
+            // --- LOGIKA SEARCH ---
             if ($request->search) {
                 $search = strtolower($request->search);
                 $pengunjung = $pengunjung->filter(fn($p) =>
@@ -341,7 +347,6 @@ public function pengunjung(Request $request)
                     str_contains(strtolower($p->identitas_no), $search));
             }
 
-            // Reset index setelah difilter
             $pengunjung = $pengunjung->values();
         }
     }
