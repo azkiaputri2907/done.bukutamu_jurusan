@@ -425,17 +425,17 @@ public function exportLaporan(Request $request)
     $roleId = (int)($userSession['role_id'] ?? 0);
     $userProdiNama = $userSession['prodi_nama'] ?? '';
 
-    // 2. Logika Penentuan Prodi untuk Export
-    if ($roleId === 1) {
-        // Jika Super Admin, ambil dari input dropdown (bisa 'all' atau prodi tertentu)
+    // 2. LOGIKA PERBAIKAN: Tentukan Prodi untuk Export
+    // Role 1 = Super Admin, Role 2 = Kajur
+    if ($roleId === 1 || $roleId === 2) {
+        // Jika Super Admin atau Kajur, ambil dari input dropdown (bisa 'all' atau prodi tertentu)
         $prodiFilter = $request->prodi_id;
     } else {
-        // Jika selain Super Admin (Kajur/Admin Prodi), PAKSA gunakan prodi mereka sendiri
-        // Ini memastikan mereka tidak bisa tembus lewat manipulasi inspect element
+        // Jika Admin Prodi (Role 3, dll), PAKSA gunakan prodi mereka sendiri dari session
         $prodiFilter = $userProdiNama;
     }
 
-    // 3. Validasi
+    // 3. Validasi input lainnya
     $request->validate([
         'jenis' => 'required',
         'tgl_mulai' => 'required|date',
@@ -456,13 +456,13 @@ public function exportLaporan(Request $request)
             'sheetName'   => $sheetName,
             'tgl_mulai'   => $request->tgl_mulai,
             'tgl_selesai' => $request->tgl_selesai,
-            'prodi'       => $prodiFilter, // Kirim variabel yang sudah kita filter di atas
+            'prodi'       => $prodiFilter, // Menggunakan variabel filter yang sudah diperbaiki
             'formatType'  => $request->format
         ]);
 
         $resData = $response->json();
 
-            if (!isset($resData['status']) || $resData['status'] !== 'success') {
+        if (!isset($resData['status']) || $resData['status'] !== 'success') {
             return back()->with('error', 'Gagal memproses data: ' . ($resData['message'] ?? 'Unknown Error'));
         }
 
@@ -474,18 +474,18 @@ public function exportLaporan(Request $request)
             return redirect()->away($resData['url']);
         }
 
-            $gid = $resData['gid'] ?? 0;
-            $format = ($request->format == 'excel') ? 'xlsx' : 'pdf';
-            $pdfParams = "&size=A4&portrait=true&fitw=true&gridlines=false&fzr=false&horizontal_alignment=CENTER";
-            $exportUrl = "https://docs.google.com/spreadsheets/d/{$spreadsheetId}/export?format={$format}&gid={$gid}";
+        $gid = $resData['gid'] ?? 0;
+        $format = ($request->format == 'excel') ? 'xlsx' : 'pdf';
+        $pdfParams = "&size=A4&portrait=true&fitw=true&gridlines=false&fzr=false&horizontal_alignment=CENTER";
+        $exportUrl = "https://docs.google.com/spreadsheets/d/{$spreadsheetId}/export?format={$format}&gid={$gid}";
 
-            if ($format == 'pdf') $exportUrl .= $pdfParams;
+        if ($format == 'pdf') $exportUrl .= $pdfParams;
 
-            return redirect()->away($exportUrl);
-        } catch (\Exception $e) {
-            return back()->with('error', 'Terjadi kesalahan ekspor: ' . $e->getMessage());
-        }
+        return redirect()->away($exportUrl);
+    } catch (\Exception $e) {
+        return back()->with('error', 'Terjadi kesalahan ekspor: ' . $e->getMessage());
     }
+}
 
     public function updateKunjungan(Request $request, $id)
     {

@@ -8,7 +8,9 @@
 @php
     $userSession = session('user');
     $roleId = (int)($userSession['role_id'] ?? 0);
-    $isSuperAdmin = ($roleId === 1);
+    
+    // LOGIKA AKSES: Super Admin (1) & Kajur (2) dianggap memiliki akses penuh (Power User)
+    $isPowerUser = ($roleId === 1 || $roleId === 2);
     $prodiUser = $userSession['prodi_nama'] ?? '';
 @endphp
 
@@ -51,7 +53,7 @@
 </div>
 
 <div class="max-w-3xl">
-    {{-- === FORM SECTION (Glassmorphism Style) === --}}
+    {{-- === FORM SECTION === --}}
     <div class="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-md">
         
         <div class="bg-gradient-to-r from-gray-50/50 to-white px-10 py-8 border-b border-gray-100">
@@ -87,34 +89,35 @@
                             </div>
                         </div>
 
-{{-- Filter Wilayah/Prodi --}}
-<div>
-    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-1">Filter Wilayah/Prodi</label>
-    @if($isSuperAdmin)
-        <div class="relative group">
-            <i class="fas fa-university absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-indigo-500 transition-colors"></i>
-            <select name="prodi_id" id="prodi_id" required
-                    class="w-full bg-gray-50 border-none rounded-2xl pl-12 pr-4 py-4 text-sm font-bold text-gray-700 outline-none focus:ring-4 focus:ring-indigo-500/10 focus:bg-white transition shadow-sm appearance-none">
-                <option value="all">Semua Program Studi</option>
-                @foreach($prodi as $p)
-                    <option value="{{ $p->nama }}">{{ $p->nama }}</option>
-                @endforeach
-            </select>
-            <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none text-xs"></i>
-        </div>
-    @else
-        {{-- Kunci filter untuk non-admin --}}
-        <div class="flex items-center justify-between w-full px-5 py-4 bg-indigo-50/50 border border-indigo-100 rounded-2xl text-sm font-bold text-indigo-700 shadow-sm">
-            <span class="flex items-center gap-3">
-                <i class="fas fa-graduation-cap"></i>
-                {{ $prodiUser }}
-            </span>
-            <i class="fas fa-lock text-indigo-200 text-xs"></i>
-        </div>
-        {{-- Pastikan input hidden ini memiliki nilai $prodiUser --}}
-        <input type="hidden" name="prodi_id" value="{{ $prodiUser }}">
-    @endif
-</div>
+                        {{-- Filter Wilayah/Prodi --}}
+                        <div>
+                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-1">Filter Wilayah/Prodi</label>
+                            
+                            {{-- Role 1 (Super Admin) & Role 2 (Kajur) bisa pilih prodi --}}
+                            @if($isPowerUser)
+                                <div class="relative group">
+                                    <i class="fas fa-university absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-indigo-500 transition-colors"></i>
+                                    <select name="prodi_id" id="prodi_id" required
+                                            class="w-full bg-gray-50 border-none rounded-2xl pl-12 pr-4 py-4 text-sm font-bold text-gray-700 outline-none focus:ring-4 focus:ring-indigo-500/10 focus:bg-white transition shadow-sm appearance-none">
+                                        <option value="all">Semua Program Studi</option>
+                                        @foreach($prodi as $p)
+                                            <option value="{{ $p->nama }}">{{ $p->nama }}</option>
+                                        @endforeach
+                                    </select>
+                                    <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none text-xs"></i>
+                                </div>
+                            @else
+                                {{-- Kunci filter untuk Admin Prodi (Role 3) --}}
+                                <div class="flex items-center justify-between w-full px-5 py-4 bg-indigo-50/50 border border-indigo-100 rounded-2xl text-sm font-bold text-indigo-700 shadow-sm">
+                                    <span class="flex items-center gap-3">
+                                        <i class="fas fa-graduation-cap"></i>
+                                        {{ $prodiUser }}
+                                    </span>
+                                    <i class="fas fa-lock text-indigo-200 text-xs"></i>
+                                </div>
+                                <input type="hidden" name="prodi_id" value="{{ $prodiUser }}">
+                            @endif
+                        </div>
                     </div>
 
                     {{-- Row 2: Format Output --}}
@@ -170,11 +173,11 @@
 
                     {{-- Submit Button --}}
                     <div class="pt-6">
-<button type="submit" id="btnSubmit"
-        class="group w-full flex items-center justify-center gap-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-5 rounded-[1.5rem] font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-indigo-100 hover:shadow-2xl hover:scale-[1.02] active:scale-95 transition-all duration-300">
-    <i class="fas fa-cloud-download-alt text-lg group-hover:animate-bounce"></i>
-    <span>Generate Document</span>
-</button>
+                        <button type="submit" id="btnSubmit"
+                                class="group w-full flex items-center justify-center gap-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-5 rounded-[1.5rem] font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-indigo-100 hover:shadow-2xl hover:scale-[1.02] active:scale-95 transition-all duration-300">
+                            <i class="fas fa-cloud-download-alt text-lg group-hover:animate-bounce"></i>
+                            <span>Generate Document</span>
+                        </button>
                     </div>
                 </div>
             </form>
@@ -195,9 +198,8 @@
         const tglMulai = this.tgl_mulai.value;
         const tglSelesai = this.tgl_selesai.value;
 
-        // Validasi
         if(!tglMulai || !tglSelesai) {
-            e.preventDefault(); // Batalkan submit jika kosong
+            e.preventDefault();
             Swal.fire({
                 icon: 'warning',
                 title: 'Tanggal Kosong',
@@ -208,8 +210,6 @@
             return;
         }
 
-        // Jika validasi lolos, form akan otomatis lanjut submit (karena type="submit")
-        // Kita hanya "menitipkan" tampilan loading saja di sini
         Swal.fire({
             title: 'Memproses Data',
             html: 'Dokumen sedang disiapkan. Unduhan akan dimulai otomatis...',
@@ -221,7 +221,6 @@
             customClass: { popup: 'rounded-[2rem]' }
         });
 
-        // Tutup loading otomatis setelah 5 detik agar tombol bisa diklik lagi nanti
         setTimeout(() => {
             Swal.close();
         }, 5000);
