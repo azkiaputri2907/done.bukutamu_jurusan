@@ -34,6 +34,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
     // Dashboard & Statistik
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+    // PERBAIKAN DI SINI: Cukup tulis 'check-notification' saja
+    Route::get('/check-notification', [DashboardController::class, 'checkNotification'])->name('check-notification');
+
     // Manajemen Kunjungan, Survey, & Pengunjung (Bisa diakses Admin & Kajur)
     Route::controller(DashboardController::class)->group(function () {
         // Kunjungan

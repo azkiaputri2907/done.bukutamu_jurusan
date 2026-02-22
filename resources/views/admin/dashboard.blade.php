@@ -23,8 +23,16 @@
         </div>
     </div>
 
-    <div class="relative w-full lg:w-auto">
-        <div id="calendar-trigger" class="flex items-center justify-between lg:justify-end gap-3 bg-white px-5 py-3 rounded-2xl shadow-sm border border-gray-100 cursor-pointer hover:border-purple-200 transition-all">
+    {{-- GRUP KANAN: NOTIF & KALENDER --}}
+    <div class="flex items-center gap-3 w-full lg:w-auto">
+        {{-- NOTIFICATION BELL --}}
+        <div id="notif-bell" class="relative w-12 h-12 bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center cursor-pointer hover:border-purple-200 transition-all shrink-0">
+            <i class="fas fa-bell text-gray-400 text-lg"></i>
+            <span id="notif-dot" class="hidden absolute top-3 right-3 w-3 h-3 bg-red-500 border-2 border-white rounded-full animate-ping"></span>
+        </div>
+
+        {{-- CALENDAR TRIGGER --}}
+        <div id="calendar-trigger" class="relative flex-1 lg:flex-none flex items-center justify-between lg:justify-end gap-3 bg-white px-5 py-3 rounded-2xl shadow-sm border border-gray-100 cursor-pointer hover:border-purple-200 transition-all">
             <div class="text-left lg:text-right">
                 <p class="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Hari Ini</p>
                 <p class="text-xs md:text-sm font-bold text-gray-700">{{ \Carbon\Carbon::now()->isoFormat('dddd, D MMMM Y') }}</p>
@@ -106,6 +114,79 @@
         
         Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
         Chart.defaults.color = '#94a3b8';
+
+        const userId = "{{ session('user')['email'] ?? 'guest' }}";        const storageKey = 'last_notif_id_user_' + userId;
+
+        let lastNotifiedId = localStorage.getItem(storageKey);
+        const notifDot = document.getElementById('notif-dot');
+        const bellIcon = document.querySelector('#notif-bell i');
+
+function checkNewKunjungan() {
+    fetch("{{ route('admin.check-notification') }}")
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success' && data.latest_id) {
+                const currentId = data.latest_id.toString();
+                
+                // Jika ID berbeda dengan yang terakhir disimpan di browser
+                if (lastNotifiedId !== currentId) {
+                    localStorage.setItem(storageKey, currentId);
+                    lastNotifiedId = currentId;
+
+                    showNotification(data.nama, data.keperluan);                    
+                    // Efek Visual
+                    notifDot.classList.remove('hidden');
+                    bellIcon.classList.replace('text-gray-400', 'text-yellow-500');
+                    bellIcon.classList.add('animate-bounce');
+                }
+            }
+        })
+        .catch(err => console.error("Notif Error:", err));
+}
+
+        function showNotification(nama, keperluan) {
+
+            const displayNama = nama || "Tamu Baru";
+            const displayKeperluan = keperluan || "Kunjungan";
+    
+            Swal.fire({
+                title: '<div class="flex items-center gap-3"><i class="fas fa-bell animate-tada text-yellow-400"></i> <span class="text-indigo-600">Tamu Prodi Baru!</span></div>',                icon: 'success',
+                html: `
+                    <div class="text-left border-t border-gray-100 pt-3 mt-2">
+                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Nama Pengunjung</p>
+                        <p class="font-bold text-gray-800 text-lg mb-3">${displayNama}</p>
+                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Keperluan</p>
+                        <p class="text-gray-600 text-sm italic bg-gray-50 p-2 rounded-lg border-l-4 border-indigo-500">"${displayKeperluan}"</p>
+                    </div>
+                `,
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 30000,
+                timerProgressBar: true,
+                showCloseButton: true,
+                background: '#ffffff',
+                customClass: { popup: 'rounded-[2rem] shadow-2xl border-2 border-indigo-100' },
+                didOpen: () => {
+                    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+                    audio.play().catch(e => console.log("Audio blocked by browser"));
+                }
+            });
+        }
+
+        // Jalankan polling setiap 60 detik
+        setInterval(checkNewKunjungan, 10000);
+        // Jalankan sekali saat halaman terbuka
+        checkNewKunjungan();
+
+        // --- SAMPAI SINI ---
+
+        // Reset bell saat diklik
+        document.getElementById('notif-bell').addEventListener('click', () => {
+            notifDot.classList.add('hidden');
+            bellIcon.classList.replace('text-yellow-500', 'text-gray-400');
+            bellIcon.classList.remove('animate-bounce');
+        });
 
         // Line Chart
         const lineCtx = document.getElementById('lineChart').getContext('2d');

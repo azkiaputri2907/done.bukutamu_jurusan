@@ -23,7 +23,7 @@
             <nav class="flex items-center gap-2 mb-3">
                 <a href="{{ route('admin.dashboard') }}" class="text-xs font-semibold text-gray-400 hover:text-indigo-600 transition-colors">Dashboard</a>
                 <i class="fas fa-chevron-right text-[10px] text-gray-300"></i>
-                <span class="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">Master Data</span>
+                <span class="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">Master Data Pengunjung</span>
             </nav>
             
             {{-- Title --}}

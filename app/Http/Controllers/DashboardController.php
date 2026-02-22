@@ -702,5 +702,37 @@ public function exportLaporan(Request $request)
 
         return view('admin.kunjungan', compact('kunjungan', 'keperluan_master'));
     }
+public function checkNotification()
+{
+    $user = session('user');
+    
+    // Jika Super Admin, kirim 'all'
+    // Jika Admin Prodi, kirim nama prodi (misal: "D3 Teknik Informatika")
+    $filter = ((int)$user['role_id'] === 1) ? 'all' : ($user['prodi_nama'] ?? 'all');
+
+    try {
+        $response = Http::withoutVerifying()->get(env('GOOGLE_SCRIPT_URL'), [
+            'action' => 'getDashboardData',
+            'prodi_id' => $filter // Sekarang isinya teks nama prodi
+        ]);
+
+        if ($response->successful()) {
+            $res = $response->json();
+            $latest = $res['data']['latest_tamu'] ?? null;
+
+            if ($latest) {
+                return response()->json([
+                    'status' => 'success',
+                    'latest_id' => $latest['id'],
+                    'nama' => $latest['nama'],
+                    'keperluan' => $latest['keperluan']
+                ]);
+            }
+        }
+    } catch (\Exception $e) {
+        return response()->json(['status' => 'error']);
+    }
+    return response()->json(['status' => 'empty']);
+}
 
 }
