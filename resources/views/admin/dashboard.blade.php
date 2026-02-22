@@ -9,11 +9,16 @@
         </div>
         <div>
             <h2 class="text-xl md:text-3xl font-extrabold text-gray-800 tracking-tight">
-                Dashboard <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#a044ff] to-[#3366ff]">{{ session('user')['role_nama'] }}</span>
+                Dashboard 
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#a044ff] to-[#3366ff]">
+                    {{ (int)session('user')['role_id'] === 1 ? 'Global' : session('user')['prodi_nama'] }}
+                </span>
             </h2>
             <div class="flex items-center gap-2 mt-1">
                 <span class="w-8 h-1 bg-gradient-to-r from-[#ff3366] to-[#a044ff] rounded-full"></span>
-                <p class="text-gray-500 font-medium text-[10px] md:text-xs uppercase tracking-wider">Overview Statistik Real-time</p>
+                <p class="text-gray-500 font-medium text-[10px] md:text-xs uppercase tracking-wider">
+                    {{ (int)session('user')['role_id'] === 1 ? 'Ringkasan Seluruh Politeknik' : 'Statistik Khusus Program Studi' }}
+                </p>
             </div>
         </div>
     </div>
@@ -31,6 +36,19 @@
         </div>
     </div>
 </div>
+
+{{-- INFORMASI ROLE ALERT (Hanya Admin Prodi) --}}
+@if((int)session('user')['role_id'] !== 1)
+<div class="mb-6 bg-blue-50 border border-blue-100 rounded-2xl p-4 flex items-center gap-4">
+    <div class="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center text-white shrink-0">
+        <i class="fas fa-info-circle"></i>
+    </div>
+    <p class="text-sm text-blue-800 leading-tight">
+        <span class="font-bold">Mode Terbatas:</span> Saat ini Anda masuk sebagai <strong>Admin {{ session('user')['prodi_nama'] }}</strong>. 
+        Data yang ditampilkan di bawah hanya mencakup kunjungan yang ditujukan ke program studi Anda.
+    </p>
+</div>
+@endif
 
 {{-- CARDS --}}
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-10">
@@ -113,26 +131,58 @@
                     pointRadius: 4
                 }]
             },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
-                scales: { y: { beginAtZero: true, grid: { borderDash: [2, 4], color: '#f1f5f9' } }, x: { grid: { display: false } } }
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                plugins: { legend: { display: false } },
+                scales: { 
+                    y: { beginAtZero: true, grid: { borderDash: [2, 4], color: '#f1f5f9' } }, 
+                    x: { grid: { display: false } } 
+                }
             }
         });
 
-        // Radar Chart
+        // Radar Chart di dashboard.blade.php
         new Chart(document.getElementById('radarChart'), {
             type: 'radar',
             data: {
-                labels: ['Fasilitas', 'Pelayanan', 'Respon', 'Informasi', 'Kebersihan'],
+                // SESUAIKAN URUTAN INI
+                labels: ['Fasilitas', 'Pelayanan', 'Kebersihan', 'Respon', 'Informasi'], 
                 datasets: [{
                     label: 'Skor',
-                    data: [{{ $avg_aspek->p1 ?? 0 }}, {{ $avg_aspek->p2 ?? 0 }}, {{ $avg_aspek->p3 ?? 0 }}, {{ $avg_aspek->p4 ?? 0 }}, {{ $avg_aspek->p5 ?? 0 }}],
+                    // Pastikan mapping variabelnya benar sesuai indeks GAS kamu
+                    data: [
+                        {{ $avg_aspek->p1 }}, // Fasilitas
+                        {{ $avg_aspek->p2 }}, // Pelayanan
+                        {{ $avg_aspek->p3 }}, // Kebersihan
+                        {{ $avg_aspek->p4 }}, // Respon
+                        {{ $avg_aspek->p5 }}  // Informasi
+                    ],
                     backgroundColor: 'rgba(255, 51, 102, 0.2)',
                     borderColor: '#ff3366',
                     borderWidth: 2,
                     pointBackgroundColor: '#ff3366',
                 }]
             },
-            options: { responsive: true, maintainAspectRatio: false, scales: { r: { angleLines: { color: '#e2e8f0' }, suggestedMin: 0, suggestedMax: 5, ticks: { display: false } } }, plugins: { legend: { display: false } } }
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                scales: { 
+                    r: { 
+                        angleLines: { color: '#e2e8f0' }, 
+                        suggestMin: 0, 
+                        suggestMax: 5, // Batasi skala ke 5 agar grafik mekar
+                        min: 0,        // Tambahkan min agar pasti mulai dari tengah
+                        max: 5,        // Tambahkan max agar bentuk radar terlihat jelas
+                        ticks: { 
+                            stepSize: 1,
+                            display: false 
+                        },
+                        pointLabels: { font: { size: 10, weight: '600' } }
+                    } 
+                }, 
+                plugins: { legend: { display: false } } 
+            }
         });
     });
 </script>

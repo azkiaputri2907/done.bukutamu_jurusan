@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
-
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -42,25 +41,22 @@
                 <p class="text-[10px] opacity-80 uppercase tracking-[0.2em] mt-2 font-medium">Politeknik Negeri Banjarmasin</p>
             </div>
 
-{{-- User Profile Badge --}}
-<div class="mx-6 p-4 bg-white/10 rounded-2xl flex items-center gap-3 mb-6 border border-white/5 backdrop-blur-sm">
-    <div class="shrink-0">
-        {{-- Ganti Auth::user()->foto menjadi session('user')['foto'] --}}
-        @if(session('user')['foto'])
-            <img src="{{ asset(session('user')['foto']) }}" alt="Profile" class="w-12 h-12 rounded-xl object-cover border-2 border-white/20 shadow-sm">
-        @else
-            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center border border-white/10">
-                {{-- Ambil inisial dari session --}}
-                <span class="font-bold text-xl">{{ substr(session('user')['name'], 0, 1) }}</span>
+            {{-- User Profile Badge --}}
+            <div class="mx-6 p-4 bg-white/10 rounded-2xl flex items-center gap-3 mb-6 border border-white/5 backdrop-blur-sm">
+                <div class="shrink-0">
+                    @if(isset(session('user')['foto']) && session('user')['foto'])
+                        <img src="{{ asset(session('user')['foto']) }}" alt="Profile" class="w-12 h-12 rounded-xl object-cover border-2 border-white/20 shadow-sm">
+                    @else
+                        <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center border border-white/10">
+                            <span class="font-bold text-xl">{{ substr(session('user')['name'] ?? 'U', 0, 1) }}</span>
+                        </div>
+                    @endif
+                </div>
+                <div class="truncate">
+                    <p class="text-sm font-bold truncate">{{ session('user')['name'] ?? 'Guest' }}</p>
+                    <p class="text-[10px] opacity-70 uppercase tracking-wider">{{ session('user')['role_nama'] ?? 'User' }}</p>
+                </div>
             </div>
-        @endif
-    </div>
-    <div class="truncate">
-        {{-- Ganti nama dan role --}}
-        <p class="text-sm font-bold truncate">{{ session('user')['name'] }}</p>
-        <p class="text-[10px] opacity-70 uppercase tracking-wider">{{ session('user')['role_nama'] ?? 'User' }}</p>
-    </div>
-</div>
 
             {{-- Navigation --}}
             <nav class="flex-1 px-4 space-y-1.5 overflow-y-auto custom-scrollbar">
@@ -88,29 +84,29 @@
 
                 <div class="pt-4 pb-2 px-4 text-[10px] uppercase tracking-widest opacity-50 font-bold">Laporan & Setting</div>
 
-<a href="{{ route('admin.laporan') }}" 
-   class="flex items-center gap-3 py-3.5 px-4 rounded-xl transition-all duration-300 {{ request()->routeIs('admin.laporan*') ? 'bg-white text-[#a044ff] font-bold shadow-lg' : 'opacity-70 hover:opacity-100 hover:bg-white/10' }}">
-    <i class="fas fa-file-export w-5 text-center"></i> <span>Laporan</span>
-</a>
+                <a href="{{ route('admin.laporan') }}" 
+                   class="flex items-center gap-3 py-3.5 px-4 rounded-xl transition-all duration-300 {{ request()->routeIs('admin.laporan*') ? 'bg-white text-[#a044ff] font-bold shadow-lg' : 'opacity-70 hover:opacity-100 hover:bg-white/10' }}">
+                    <i class="fas fa-file-export w-5 text-center"></i> <span>Laporan</span>
+                </a>
 
-{{-- Admin Only Area - Menggunakan Session Manual --}}
-@if(session('user')['role_nama'] === 'Administrator')
-    <a href="{{ route('admin.users') }}" 
-       class="flex items-center gap-3 py-3.5 px-4 rounded-xl transition-all duration-300 {{ request()->routeIs('admin.users*') ? 'bg-white text-[#a044ff] font-bold shadow-lg' : 'opacity-70 hover:opacity-100 hover:bg-white/10' }}">
-        <i class="fas fa-user-cog w-5 text-center"></i> <span>Manajemen User</span>
-    </a>
-    
-    <a href="{{ route('admin.keperluan.index') }}" 
-       class="flex items-center gap-3 py-3.5 px-4 rounded-xl transition-all duration-300 {{ request()->routeIs('admin.keperluan*') ? 'bg-white text-[#a044ff] font-bold shadow-lg' : 'opacity-70 hover:opacity-100 hover:bg-white/10' }}">
-        <i class="fas fa-tags w-5 text-center"></i> <span>Keperluan</span>
-    </a>
-@endif
+                {{-- Admin Only Area - Menggunakan ID 1 untuk Super Admin --}}
+                @if(isset(session('user')['role_id']) && (int)session('user')['role_id'] === 1)
+                    <a href="{{ route('admin.users') }}" 
+                       class="flex items-center gap-3 py-3.5 px-4 rounded-xl transition-all duration-300 {{ request()->routeIs('admin.users*') ? 'bg-white text-[#a044ff] font-bold shadow-lg' : 'opacity-70 hover:opacity-100 hover:bg-white/10' }}">
+                        <i class="fas fa-user-cog w-5 text-center"></i> <span>Manajemen User</span>
+                    </a>
+                    
+                    <a href="{{ route('admin.keperluan.index') }}" 
+                       class="flex items-center gap-3 py-3.5 px-4 rounded-xl transition-all duration-300 {{ request()->routeIs('admin.keperluan*') ? 'bg-white text-[#a044ff] font-bold shadow-lg' : 'opacity-70 hover:opacity-100 hover:bg-white/10' }}">
+                        <i class="fas fa-tags w-5 text-center"></i> <span>Keperluan</span>
+                    </a>
+                @endif
             </nav>
 
             {{-- Logout --}}
             <div class="p-6 mt-auto">
                 <button type="button" onclick="confirmLogout()"
-                    class="flex items-center gap-2 text-white/80 hover:text-white transition w-full group cursor-pointer border-none bg-transparent outline-none">
+                    class="flex items-center gap-2 text-white/80 hover:text-white transition w-full group cursor-pointer border-none bg-transparent outline-none text-left">
                     <div class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center group-hover:bg-red-500 transition-colors">
                         <i class="fas fa-sign-out-alt text-xs"></i> 
                     </div>
@@ -123,8 +119,7 @@
         <div x-show="sideBarOpen" x-cloak @click="sideBarOpen = false" x-transition.opacity class="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden"></div>
 
         {{-- CONTENT WRAPPER --}}
-        <div class="flex-1 flex flex-col min-w-0 overflow-hidden transition-all duration-500"
-             :class="sideBarOpen ? 'lg:scale-100' : ''">
+        <div class="flex-1 flex flex-col min-w-0 overflow-hidden transition-all duration-500">
             
             <header class="bg-white/80 backdrop-blur-md border-b border-gray-100 lg:hidden px-6 py-4 flex justify-between items-center sticky top-0 z-30">
                 <div class="flex items-center gap-3">
@@ -141,7 +136,7 @@
             <main class="flex-1 p-4 md:p-8 lg:p-10 overflow-y-auto custom-scrollbar">
                 @if(session('success'))
                     <div class="mb-6 bg-green-50 text-green-700 border border-green-200 rounded-2xl p-4 flex items-center gap-3 shadow-sm">
-                        <i class="fas fa-check-circle text-xl animate-bounce"></i>
+                        <i class="fas fa-check-circle text-xl"></i>
                         <span class="font-bold text-sm">{{ session('success') }}</span>
                     </div>
                 @endif
@@ -167,7 +162,11 @@
                 confirmButtonText: 'Ya, Logout',
                 cancelButtonText: 'Batal',
                 reverseButtons: true,
-                customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl px-5 py-3 font-bold', cancelButton: 'rounded-xl px-5 py-3 font-bold' }
+                customClass: { 
+                    popup: 'rounded-[2rem]', 
+                    confirmButton: 'rounded-xl px-5 py-3 font-bold', 
+                    cancelButton: 'rounded-xl px-5 py-3 font-bold' 
+                }
             }).then((result) => {
                 if (result.isConfirmed) {
                     document.getElementById('logout-form').submit();
