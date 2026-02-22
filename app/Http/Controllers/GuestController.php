@@ -19,20 +19,23 @@ public function index() {
 
     try {
         $scriptUrl = env('GOOGLE_SCRIPT_URL');
-        // Tambahkan timeout yang lebih lama (10 detik) jika koneksi lambat
-        $response = Http::timeout(10)->get($scriptUrl);
+        
+        // Tambahkan query parameter ?action=getLandingStats
+        $response = Http::timeout(15)->withoutVerifying()->get($scriptUrl, [
+            'action' => 'getLandingStats'
+        ]);
         
         if ($response->successful()) {
             $result = $response->json();
             if (isset($result['status']) && $result['status'] == 'success') {
-                $totalPengunjung = $result['data']['totalPengunjung'];
-                $totalKunjungan  = $result['data']['totalKunjungan'];
-                $rataRataSurvey  = $result['data']['rataRataSurvey'];
+                // Pastikan key-nya sesuai dengan JSON dari GAS
+                $totalPengunjung = $result['data']['totalPengunjung'] ?? 0;
+                $totalKunjungan  = $result['data']['totalKunjungan'] ?? 0;
+                $rataRataSurvey  = $result['data']['rataRataSurvey'] ?? 0;
             }
         }
     } catch (\Exception $e) {
-        Log::error('Gagal mengambil statistik: ' . $e->getMessage());
-        // Data tetap 0 agar halaman tidak crash
+        Log::error('Gagal mengambil statistik Landing Page: ' . $e->getMessage());
     }
 
     return view('guest.landing', compact('totalPengunjung', 'totalKunjungan', 'rataRataSurvey'));

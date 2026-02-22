@@ -100,9 +100,9 @@ class DashboardController extends Controller
 
             $data = $res['data'];
             $stats = [
-                'total_tamu'     => $data['totalKunjungan'] ?? 0,
-                'tamu_hari_ini'  => $data['kunjunganHariIni'] ?? 0,
-                'rata_rata_puas' => round($data['rataRataSurvey'] ?? 0, 1),
+                'total_tamu'     => (int)($data['totalKunjungan'] ?? 0),
+                'tamu_hari_ini'  => (int)($data['kunjunganHariIni'] ?? 0),
+                'rata_rata_puas' => floatval($data['rataRataSurvey'] ?? 0), // Pastikan float
             ];
 
             // Ganti bagian $avg_aspek di DashboardController.php
