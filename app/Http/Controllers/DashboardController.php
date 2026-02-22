@@ -135,115 +135,240 @@ class DashboardController extends Controller
     }
 
     // --- DATA KUNJUNGAN ---
-    public function kunjungan(Request $request)
-    {
-        $prodi_id = $this->getProdiFilter();
-        try {
-            $response = Http::withoutVerifying()
-            ->timeout(10)
+public function kunjungan(Request $request)
+{
+    // 1. Ambil input dari request (dari form filter yang kita buat sebelumnya)
+    $search = strtolower($request->query('search'));
+    $filterProdi = $request->query('prodi'); // Tangkap parameter 'prodi'
+
+    // 2. Tentukan prodi_id untuk API
+    // Jika user adalah Super Admin (Role 1), gunakan pilihan dropdown. 
+    // Jika user adalah Admin Prodi, tetap gunakan filter default mereka.
+    $prodi_id = ((int)session('user')['role_id'] === 1 && $filterProdi) 
+                ? $filterProdi 
+                : $this->getProdiFilter();
+
+    try {
+        $response = Http::withoutVerifying()
+            ->timeout(15)
             ->get(env('GOOGLE_SCRIPT_URL'), [
                 'action' => 'getAllData',
-                'prodi_id' => $prodi_id
+                'prodi_id' => $prodi_id // Kirim ke Google Script
             ]);
 
-            $allData = $response->json()['data'] ?? [];
-            $rawKunjungan = $allData['bukutamu'] ?? [];
+        $allData = $response->json()['data'] ?? [];
+        $rawKunjungan = $allData['bukutamu'] ?? [];
 
-            if (count($rawKunjungan) > 0) array_shift($rawKunjungan);
+        if (count($rawKunjungan) > 0) array_shift($rawKunjungan); // Hapus header
 
-            $kunjungan = collect($rawKunjungan)->map(function($row) {
-                // [PERUBAHAN]: Parsing tanggal kunjungan ke format yang rapi & sesuai zona waktu
-                $tgl = !empty($row[1]) ? Carbon::parse($row[1])->timezone('Asia/Makassar')->translatedFormat('d F Y') : '-';
+        $kunjungan = collect($rawKunjungan)->map(function($row) {
+            return (object)[
+                'nomor_kunjungan' => $row[0] ?? '-',
+                'tanggal'         => !empty($row[1]) ? Carbon::parse($row[1])->timezone('Asia/Makassar')->translatedFormat('d F Y') : '-',
+                'nama_lengkap'    => $row[3] ?? '-',
+                'asal_instansi'   => $row[4] ?? '-', // Ini biasanya berisi nama prodi/instansi
+                'keperluan'       => $row[5] ?? '-',
+            ];
+        });
 
-                return (object)[
-                    'nomor_kunjungan' => $row[0] ?? '-',
-                    'tanggal'         => $tgl,
-                    'nama_lengkap'    => $row[3] ?? '-',
-                    'asal_instansi'   => $row[4] ?? '-',
-                    'keperluan'       => $row[5] ?? '-',
-                ];
-            })->reverse();
-
-            return view('admin.kunjungan.index', compact('kunjungan'));
-        } catch (\Exception $e) {
-            return back()->with('error', 'Gagal mengambil data kunjungan dari Sheets.');
+        // 3. Logika Filter Tambahan (Jika API tidak memfilter prodi dengan sempurna)
+        if ($filterProdi && (int)session('user')['role_id'] === 1) {
+            $kunjungan = $kunjungan->filter(function($item) use ($filterProdi) {
+                // Sesuaikan 'asal_instansi' dengan kolom mana yang menyimpan nama Prodi di Sheets Anda
+                return str_contains($item->asal_instansi, $filterProdi);
+            });
         }
+
+        // 4. Logika Pencarian Nama/Nomor
+        if ($search) {
+            $kunjungan = $kunjungan->filter(function($item) use ($search) {
+                return str_contains(strtolower($item->nama_lengkap), $search) || 
+                       str_contains(strtolower($item->nomor_kunjungan), $search);
+            });
+        }
+
+        $kunjungan = $kunjungan->reverse()->values();
+
+        return view('admin.kunjungan.index', compact('kunjungan'));
+
+    } catch (\Exception $e) {
+        Log::error("Kunjungan Error: " . $e->getMessage());
+        return back()->with('error', 'Gagal mengambil data kunjungan.');
     }
+}
 
     // --- DATA SURVEY ---
-    public function survey(Request $request)
-    {
-        $prodi_id = $this->getProdiFilter();
-        try {
-            $response = Http::withoutVerifying()
-            ->timeout(10)
-            ->get(env('GOOGLE_SCRIPT_URL'), [
-                'action' => 'getAllData',
-                'prodi_id' => $prodi_id
-            ]);
+public function survey(Request $request)
+{
+    $user = session('user');
+    $roleId = (int)($user['role_id'] ?? 0);
+    $isSuperAdminOrKajur = in_array($roleId, [1, 2]);
 
-            $allData = $response->json()['data'] ?? [];
-            $rawSurvey = $allData['survey'] ?? [];
-            if (count($rawSurvey) > 0) array_shift($rawSurvey);
+    $filterProdi = $request->query('prodi');
+    $search = strtolower($request->query('search'));
 
-            $surveys = collect($rawSurvey)->map(function ($row) use ($prodi_id) {
-                // [PERUBAHAN]: Parsing tanggal & jam survey ke zona waktu Makassar
-                $waktu = !empty($row[0]) ? Carbon::parse($row[0])->timezone('Asia/Makassar')->translatedFormat('d M Y, H:i') : '-';
+    $prodi_id_api = ($isSuperAdminOrKajur && $filterProdi) ? $filterProdi : $this->getProdiFilter();
 
-                return (object)[
-                    'waktu'         => $waktu,
-                    'id_kunjungan'  => $row[1] ?? '-',
-                    'nama_tamu'     => ($prodi_id === 'all') ? ($row[2] ?? 'Anonim') : 'Pengunjung (Disamarkan)',
-                    'p1' => (int)($row[3] ?? 0),
-                    'p2' => (int)($row[4] ?? 0),
-                    'p3' => (int)($row[5] ?? 0),
-                    'p4' => (int)($row[6] ?? 0),
-                    'p5' => (int)($row[7] ?? 0),
-                    'kritik_saran'  => $row[8] ?? '-',
-                ];
-            })->reverse();
+try {
+        $response = Http::withoutVerifying()->timeout(15)->get(env('GOOGLE_SCRIPT_URL'), [
+            'action' => 'getAllData',
+            'prodi_id' => $prodi_id_api 
+        ]);
 
-            return view('admin.survey.index', compact('surveys'));
-        } catch (\Exception $e) {
-            return back()->with('error', 'Gagal memuat data survey.');
-        }
+        $allData = $response->json()['data'] ?? [];
+        
+        // 1. BUAT DATABASE LOKAL (MAP) DARI BUKU TAMU
+        $rawKunjungan = $allData['bukutamu'] ?? [];
+        if (count($rawKunjungan) > 0) array_shift($rawKunjungan);
+        
+        // Map ini kunci utamanya adalah ID Kunjungan
+        $kunjunganMap = collect($rawKunjungan)->keyBy(0); 
+
+        // 2. PROSES DATA SURVEY
+        $rawSurvey = $allData['survey'] ?? [];
+        if (count($rawSurvey) > 0) array_shift($rawSurvey);
+
+$surveys = collect($rawSurvey)->map(function ($row) use ($isSuperAdminOrKajur, $kunjunganMap) {
+    $idKunjungan = $row[1] ?? null;
+    $namaDariSurvey = $row[2] ?? null;
+    
+    // 1. Coba cari berdasarkan ID Kunjungan
+    $dataKunjungan = $kunjunganMap->get($idKunjungan);
+    
+    // 2. Jika tidak ketemu ID-nya, coba cari berdasarkan Nama (Fallback)
+    if (!$dataKunjungan && $namaDariSurvey) {
+        $dataKunjungan = $kunjunganMap->first(function($item) use ($namaDariSurvey) {
+            return strtolower(trim($item[3] ?? '')) === strtolower(trim($namaDariSurvey));
+        });
     }
 
-    // --- DATA PENGUNJUNG ---
-    public function pengunjung(Request $request)
-    {
-        $response = Http::get(env('GOOGLE_SCRIPT_URL'), ['action' => 'getAllData']);
-        $pengunjung = collect([]);
+    // Tentukan Prodi
+    $prodiNama = 'Umum';
+    if ($dataKunjungan && isset($dataKunjungan[4])) {
+        $prodiNama = trim($dataKunjungan[4]);
+    } elseif (isset($row[10])) {
+        $prodiNama = trim($row[10]);
+    }
 
-        if ($response->successful()) {
-            $allData = $response->json()['data'] ?? [];
-            $raw = $allData['pengunjung'] ?? [];
+    return (object)[
+        'waktu'         => !empty($row[0]) ? Carbon::parse($row[0])->timezone('Asia/Makassar')->translatedFormat('d M Y') : '-',
+        'id_kunjungan'  => $isSuperAdminOrKajur ? ($idKunjunganAsli ?? '-') : 'HIDDEN',        'nama_tamu'     => $isSuperAdminOrKajur ? ($dataKunjungan[3] ?? $namaDariSurvey) : 'Pengunjung (Disamarkan)',
+        'prodi_nama'    => $prodiNama, 
+        'p1' => (int)($row[3] ?? 0),
+        'p2' => (int)($row[4] ?? 0),
+        'p3' => (int)($row[5] ?? 0),
+        'p4' => (int)($row[6] ?? 0),
+        'p5' => (int)($row[7] ?? 0),
+        'kritik_saran'  => $row[8] ?? '-',
+    ];
+});
 
-            if (count($raw) > 1) {
-                array_shift($raw);
-                $pengunjung = collect($raw)->map(function ($row) {
-                    // [PERUBAHAN]: Parsing tanggal terakhir kunjungan
-                    $terakhir = !empty($row[3]) ? Carbon::parse($row[3])->timezone('Asia/Makassar')->translatedFormat('d F Y') : '-';
+        // 3. FILTER AGRESIF (Mencari sebagian kata)
+        if ($filterProdi && $filterProdi !== 'all') {
+            $surveys = $surveys->filter(function($s) use ($filterProdi) {
+                $val = strtolower(trim($s->prodi_nama));
+                $target = strtolower(trim($filterProdi));
 
-                    return (object)[
-                        'identitas_no'       => $row[0] ?? '-',
-                        'nama_lengkap'       => $row[1] ?? 'Tanpa Nama',
-                        'asal_instansi'      => $row[2] ?? 'Umum',
-                        'terakhir_kunjungan' => $terakhir,
-                    ];
-                });
+                // Jika target filter "D3 Teknik Informatika", 
+                // data dengan prodi "D3 Teknik Inform" (terpotong) akan TETAP LOLOS filter.
+                return str_contains($val, $target) || str_contains($target, $val);
+            });
+        }
 
-                if ($request->search) {
-                    $search = strtolower($request->search);
-                    $pengunjung = $pengunjung->filter(fn($p) =>
-                        str_contains(strtolower($p->nama_lengkap), $search) ||
-                        str_contains(strtolower($p->identitas_no), $search));
-                }
-                $pengunjung = $pengunjung->values();
+        if ($search && $isSuperAdminOrKajur) {
+            $surveys = $surveys->filter(fn($s) => str_contains(strtolower($s->nama_tamu), $search));
+        }
+
+        $surveys = $surveys->reverse()->values();
+
+        // Hitung Statistik
+        $avgScores = [0, 0, 0, 0, 0];
+        if ($surveys->count() > 0) {
+            for ($i = 1; $i <= 5; $i++) {
+                $avgScores[$i - 1] = round($surveys->avg('p' . $i), 1);
             }
         }
-        return view('admin.pengunjung.index', compact('pengunjung'));
+
+        $prodis = [
+            'D3 Teknik Listrik',
+            'D3 Teknik Elektronika',
+            'D3 Teknik Informatika',
+            'Sarjana Terapan Teknologi Rekayasa Pembangkit Energi',
+            'Sarjana Terapan Sistem Informasi Kota Cerdas'
+        ];
+
+        $aspekLabels = ['Kecepatan', 'Etika', 'Kompetensi', 'Fasilitas', 'Kualitas'];
+
+        return view('admin.survey.index', compact('surveys', 'avgScores', 'prodis', 'aspekLabels'));
+
+    } catch (\Exception $e) {
+        Log::error("Survey Error: " . $e->getMessage());
+        return back()->with('error', 'Gagal memuat data survey.');
     }
+}
+
+    // --- DATA PENGUNJUNG ---
+public function pengunjung(Request $request)
+{
+    // 1. Ambil data user dari session untuk pengecekan Role
+    $userSession = session('user');
+    $roleId = (int)($userSession['role_id'] ?? 0);
+    $prodiUser = $userSession['prodi_nama'] ?? '';
+
+    // 2. Ambil data dari Google Apps Script
+    $response = Http::get(env('GOOGLE_SCRIPT_URL'), ['action' => 'getAllData']);
+    $pengunjung = collect([]);
+
+    if ($response->successful()) {
+        $allData = $response->json()['data'] ?? [];
+        $raw = $allData['pengunjung'] ?? [];
+
+        if (count($raw) > 1) {
+            array_shift($raw); // Hapus header row
+            
+            $pengunjung = collect($raw)->map(function ($row) {
+                // Parsing tanggal terakhir kunjungan
+                $terakhir = !empty($row[3]) ? \Carbon\Carbon::parse($row[3])->timezone('Asia/Makassar')->translatedFormat('d F Y') : '-';
+
+                return (object)[
+                    'identitas_no'       => $row[0] ?? '-',
+                    'nama_lengkap'       => $row[1] ?? 'Tanpa Nama',
+                    'asal_instansi'      => $row[2] ?? 'Umum',
+                    'terakhir_kunjungan' => $terakhir,
+                ];
+            });
+
+            // 3. LOGIKA PENGUNCIAN & FILTER PRODI
+            $selectedProdi = $request->prodi;
+
+            // Jika BUKAN Super Admin (Role != 1), PAKSA filter ke prodi user tersebut
+            if ($roleId !== 1) {
+                $selectedProdi = $prodiUser;
+            }
+
+            // Jalankan filter Prodi jika ada (baik dari request maupun paksaan session)
+            if ($selectedProdi) {
+                $pengunjung = $pengunjung->filter(function ($p) use ($selectedProdi) {
+                    // Cek jika asal_instansi cocok dengan prodi yang dipilih
+                    return strtolower($p->asal_instansi) === strtolower($selectedProdi);
+                });
+            }
+
+            // 4. LOGIKA SEARCH
+            if ($request->search) {
+                $search = strtolower($request->search);
+                $pengunjung = $pengunjung->filter(fn($p) =>
+                    str_contains(strtolower($p->nama_lengkap), $search) ||
+                    str_contains(strtolower($p->identitas_no), $search));
+            }
+
+            // Reset index setelah difilter
+            $pengunjung = $pengunjung->values();
+        }
+    }
+
+    return view('admin.pengunjung.index', compact('pengunjung'));
+}
 
     // --- DATA USER (FULL GOOGLE SHEETS) ---
     public function users()
@@ -309,42 +434,61 @@ class DashboardController extends Controller
         return view('admin.laporan.index', compact('prodi'));
     }
 
-    public function exportLaporan(Request $request)
-    {
-        $request->validate([
-            'jenis' => 'required',
-            'tgl_mulai' => 'required|date',
-            'tgl_selesai' => 'required|date',
-            'prodi_id' => 'required',
-            'format' => 'required'
+public function exportLaporan(Request $request)
+{
+    // 1. Ambil data session
+    $userSession = session('user');
+    $roleId = (int)($userSession['role_id'] ?? 0);
+    $userProdiNama = $userSession['prodi_nama'] ?? '';
+
+    // 2. Logika Penentuan Prodi untuk Export
+    if ($roleId === 1) {
+        // Jika Super Admin, ambil dari input dropdown (bisa 'all' atau prodi tertentu)
+        $prodiFilter = $request->prodi_id;
+    } else {
+        // Jika selain Super Admin (Kajur/Admin Prodi), PAKSA gunakan prodi mereka sendiri
+        // Ini memastikan mereka tidak bisa tembus lewat manipulasi inspect element
+        $prodiFilter = $userProdiNama;
+    }
+
+    // 3. Validasi
+    $request->validate([
+        'jenis' => 'required',
+        'tgl_mulai' => 'required|date',
+        'tgl_selesai' => 'required|date',
+        'format' => 'required'
+    ]);
+
+    $spreadsheetId = "1ssiGHaeQaMD4NAywV_wBP9lMVkNEkoW4o8SFx-UJdvA";
+    
+    // Mapping Nama Sheet
+    $sheetName = $request->jenis;
+    if ($request->jenis == 'kunjungan') $sheetName = 'bukutamu';
+    if ($request->jenis == 'survey') $sheetName = 'survey'; 
+
+    try {
+        $response = Http::post(env('GOOGLE_SCRIPT_URL'), [
+            'action'      => 'prepareExport',
+            'sheetName'   => $sheetName,
+            'tgl_mulai'   => $request->tgl_mulai,
+            'tgl_selesai' => $request->tgl_selesai,
+            'prodi'       => $prodiFilter, // Kirim variabel yang sudah kita filter di atas
+            'formatType'  => $request->format
         ]);
 
-        $spreadsheetId = "1ssiGHaeQaMD4NAywV_wBP9lMVkNEkoW4o8SFx-UJdvA";
-        $sheetName = $request->jenis == 'kunjungan' ? 'bukutamu' : $request->jenis;
-
-        try {
-            $response = Http::post(env('GOOGLE_SCRIPT_URL'), [
-                'action'      => 'prepareExport',
-                'sheetName'   => $sheetName,
-                'tgl_mulai'   => $request->tgl_mulai,
-                'tgl_selesai' => $request->tgl_selesai,
-                'prodi'       => $request->prodi_id,
-                'formatType'  => $request->format
-            ]);
-
-            $resData = $response->json();
+        $resData = $response->json();
 
             if (!isset($resData['status']) || $resData['status'] !== 'success') {
-                return back()->with('error', 'Gagal memproses data: ' . ($resData['message'] ?? 'Unknown Error'));
-            }
+            return back()->with('error', 'Gagal memproses data: ' . ($resData['message'] ?? 'Unknown Error'));
+        }
 
-            if (isset($resData['count']) && $resData['count'] === 0) {
-                return back()->with('info', 'Tidak ada data ditemukan pada rentang tanggal tersebut.');
-            }
+        if (isset($resData['count']) && $resData['count'] === 0) {
+            return back()->with('info', 'Tidak ada data ditemukan pada rentang tanggal tersebut.');
+        }
 
-            if (!empty($resData['url'])) {
-                return redirect()->away($resData['url']);
-            }
+        if (!empty($resData['url'])) {
+            return redirect()->away($resData['url']);
+        }
 
             $gid = $resData['gid'] ?? 0;
             $format = ($request->format == 'excel') ? 'xlsx' : 'pdf';
@@ -361,40 +505,46 @@ class DashboardController extends Controller
 
     public function updateKunjungan(Request $request, $id)
     {
+        // Validasi input
+        $request->validate([
+            'keperluan' => 'required|string|max:500'
+        ]);
+
         try {
-            $response = Http::post(env('GOOGLE_SCRIPT_URL'), [
+            $response = Http::withoutVerifying()->post(env('GOOGLE_SCRIPT_URL'), [
                 'action'    => 'updateKunjungan',
                 'id'        => $id,
                 'keperluan' => $request->keperluan,
+                'admin'     => session('user')['name'] // Opsional: untuk log di GAS
             ]);
 
-            if ($response->successful()) {
-                return redirect()->back()->with('success', 'Data berhasil diupdate.');
+            if ($response->successful() && ($response->json()['status'] ?? '') === 'success') {
+                return redirect()->back()->with('success', 'Data kunjungan #' . $id . ' berhasil diperbarui.');
             }
 
-            return redirect()->back()->with('error', 'Gagal update data.');
+            return redirect()->back()->with('error', 'Gagal update data di Cloud.');
         } catch (\Exception $e) {
             Log::error('Update Kunjungan Error: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Terjadi kesalahan saat update.');
+            return redirect()->back()->with('error', 'Terjadi kesalahan sistem.');
         }
     }
 
     public function destroyKunjungan($id)
     {
         try {
-            $response = Http::post(env('GOOGLE_SCRIPT_URL'), [
+            $response = Http::withoutVerifying()->post(env('GOOGLE_SCRIPT_URL'), [
                 'action' => 'deleteKunjungan',
                 'id'     => $id,
             ]);
 
-            if ($response->successful()) {
-                return redirect()->back()->with('success', 'Data berhasil dihapus.');
+            if ($response->successful() && ($response->json()['status'] ?? '') === 'success') {
+                return redirect()->back()->with('success', 'Data kunjungan berhasil dihapus dari Cloud.');
             }
 
-            return redirect()->back()->with('error', 'Gagal menghapus data.');
+            return redirect()->back()->with('error', 'Gagal menghapus data di Cloud.');
         } catch (\Exception $e) {
             Log::error('Delete Kunjungan Error: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Terjadi kesalahan saat hapus.');
+            return redirect()->back()->with('error', 'Terjadi kesalahan koneksi.');
         }
     }
 

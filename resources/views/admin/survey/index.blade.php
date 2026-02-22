@@ -5,20 +5,48 @@
 {{-- Script SweetAlert2 --}}
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-{{-- Header Section --}}
-<div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
-    <div>
-        <h2 class="text-2xl font-extrabold text-gray-800 tracking-tight">Data Survey Kepuasan</h2>
-        <p class="text-sm text-gray-500 font-medium">Hasil penilaian pengunjung (Sinkronisasi Google Sheets).</p>
-    </div>
-    
-    <div class="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl shadow-sm border border-gray-100">
-        <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-xs">
-            <i class="fas fa-star"></i>
+{{-- === HEADER SECTION === --}}
+<div class="mb-8">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div>
+            {{-- Breadcrumb Modern --}}
+            <nav class="flex items-center gap-2 mb-3">
+                <a href="{{ route('admin.dashboard') }}" class="text-xs font-semibold text-gray-400 hover:text-indigo-600 transition-colors">Dashboard</a>
+                <i class="fas fa-chevron-right text-[10px] text-gray-300"></i>
+                <span class="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">Survey Kepuasan</span>
+            </nav>
+            
+            {{-- Title --}}
+            <h1 class="text-4xl font-extrabold text-gray-900 tracking-tight">
+                Data <span class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">Survey</span>
+            </h1>
+            <p class="text-gray-500 font-medium mt-2 flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                Hasil penilaian unit layanan dan kepuasan pengunjung secara real-time.
+            </p>
         </div>
-        <div class="flex flex-col">
-            <span class="text-[10px] uppercase font-bold text-gray-400 leading-none">Skor Maksimal</span>
-            <span class="text-sm font-black text-gray-700">5.00 Point</span>
+
+        {{-- Action Buttons --}}
+        <div class="flex items-center gap-4">
+            {{-- Card Skor Terintegrasi --}}
+            <div class="bg-white px-6 py-3 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
+                <div class="flex flex-col">
+                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Skor Maksimal</span>
+                    <div class="flex items-baseline gap-1">
+                        <span class="text-2xl font-black text-gray-800">5.0</span>
+                        <span class="text-xs font-bold text-gray-400 italic">pts</span>
+                    </div>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-md shadow-indigo-200">
+                    <i class="fas fa-star"></i>
+                </div>
+            </div>
+            
+            {{-- Refresh Button --}}
+            <a href="{{ route('admin.survey') }}" 
+               class="w-14 h-14 bg-white text-gray-500 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center hover:text-indigo-600 hover:border-indigo-200 hover:shadow-md transition-all duration-300 group">
+                <i class="fas fa-sync-alt text-lg group-hover:rotate-180 transition-transform duration-500"></i>
+            </a>
         </div>
     </div>
 </div>
@@ -28,32 +56,75 @@
     {{-- === KOLOM KIRI: DAFTAR SURVEY === --}}
     <div class="flex-1 w-full lg:w-2/3">
 
-        {{-- Search & Filter Section --}}
-        <div class="bg-white p-4 rounded-[1.5rem] shadow-sm border border-gray-100 mb-6">
-            <form action="{{ route('admin.survey') }}" method="GET" class="flex flex-col xl:flex-row gap-4">
-                {{-- Search Input --}}
-                <div class="relative flex-1">
-                    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama pengunjung..." 
-                           class="w-full pl-11 pr-4 py-3 bg-gray-50 rounded-xl border-none outline-none focus:ring-2 focus:ring-[#a044ff]/20 focus:bg-white transition font-medium text-sm text-gray-700">
-                </div>
-                
-                {{-- Filter Prodi --}}
-                <select name="prodi" onchange="this.form.submit()" class="w-full xl:w-64 bg-gray-50 px-4 py-3 rounded-xl border-none text-gray-600 font-bold outline-none cursor-pointer hover:bg-gray-100 transition text-sm focus:ring-2 focus:ring-[#a044ff]/20">
-                    <option value="">Semua Prodi / Instansi</option>
-                    @foreach($prodis as $p)
-                        <option value="{{ $p }}" {{ request('prodi') == $p ? 'selected' : '' }}>{{ $p }}</option>
+{{-- === SEARCH & FILTER SECTION === --}}
+<div class="bg-white/60 backdrop-blur-md p-3 rounded-[2rem] shadow-sm border border-gray-100 mb-8">
+    <div class="flex flex-col md:flex-row gap-3">
+        
+        @php
+            // Ambil data user dari session
+            $userSession = session('user');
+            $roleId = (int)($userSession['role_id'] ?? 0);
+            
+            // Definisikan isSuperAdmin agar tidak error di baris 85
+            $isSuperAdmin = ($roleId === 1);
+            $prodiUser = $userSession['prodi_nama'] ?? '';
+            
+            // List prodi jika tidak dikirim dari controller
+            $listProdis = $prodis ?? ['D3 Teknik Listrik', 'D3 Teknik Elektronika', 'D3 Teknik Informatika', 'D4 Teknologi Rekayasa Pembangkit Energi', 'D4 Sistem Informasi Kota Cerdas', 'Umum'];
+        @endphp
+
+        {{-- Form Pencarian --}}
+        {{-- <form action="{{ route('admin.survey') }}" method="GET" class="relative flex-1 group">
+            {{-- Kunci Pencarian: Jika bukan Super Admin, paksa kirim prodi user --}}
+            {{-- @if(!$isSuperAdmin)
+                <input type="hidden" name="prodi" value="{{ $prodiUser }}">
+            @elseif(request('prodi'))
+                <input type="hidden" name="prodi" value="{{ request('prodi') }}">
+            @endif --}}
+
+            {{-- <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-500 transition-colors"></i>
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama pengunjung..." 
+                   class="w-full pl-12 pr-6 py-4 bg-white rounded-2xl border-none outline-none focus:ring-4 focus:ring-indigo-500/10 transition font-medium text-gray-700 placeholder:text-gray-400 shadow-sm">
+        </form> --}} 
+        
+        {{-- Filter Prodi --}}
+        @if($isSuperAdmin)
+            {{-- Tampilan Dropdown untuk Super Admin --}}
+            <div class="relative min-w-[280px]">
+                <i class="fas fa-filter absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 z-10 pointer-events-none"></i>
+                <select onchange="window.location.href=this.value" 
+                        class="w-full pl-12 pr-10 py-4 bg-white rounded-2xl border-none text-gray-700 font-bold outline-none cursor-pointer hover:bg-gray-50 transition shadow-sm appearance-none focus:ring-4 focus:ring-indigo-500/10">
+                    <option value="{{ route('admin.survey') }}">Semua Program Studi</option>
+                    @foreach($listProdis as $p)
+                        <option value="{{ route('admin.survey', ['prodi' => $p, 'search' => request('search')]) }}" 
+                            {{ request('prodi') == $p ? 'selected' : '' }}>
+                            {{ $p }}
+                        </option>
                     @endforeach
                 </select>
-                
-                {{-- Reset Button --}}
-                @if(request()->anyFilled(['search', 'prodi']))
-                    <a href="{{ route('admin.survey') }}" class="flex items-center justify-center px-4 py-3 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-100 transition text-sm font-bold">
-                        <i class="fas fa-sync-alt"></i>
-                    </a>
-                @endif
-            </form>
-        </div>
+                <i class="fas fa-chevron-down absolute right-5 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none"></i>
+            </div>
+        @else
+            {{-- Tampilan Terkunci (Badge) untuk Admin Prodi --}}
+            <div class="flex items-center px-6 py-4 bg-indigo-50/50 border border-indigo-100 rounded-2xl shadow-sm">
+                <div class="flex items-center gap-3">
+                    <div class="w-2 h-2 rounded-full bg-indigo-500"></div>
+                    <span class="text-xs font-bold text-indigo-700 uppercase tracking-wider">
+                        {{ $prodiUser }}
+                    </span>
+                    <i class="fas fa-lock text-indigo-300 text-[10px] ml-1"></i>
+                </div>
+            </div>
+        @endif
+        
+        {{-- Reset Button --}}
+        @if(request()->anyFilled(['search', 'prodi']))
+            <a href="{{ route('admin.survey') }}" class="flex items-center justify-center px-6 bg-rose-50 text-rose-500 rounded-2xl hover:bg-rose-500 hover:text-white transition-all duration-300 font-bold shadow-sm">
+                <i class="fas fa-times-circle mr-2"></i> Reset
+            </a>
+        @endif
+    </div>
+</div>
 
         {{-- Content Table --}}
         <div class="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
@@ -93,10 +164,11 @@
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
                                     <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-[#a044ff] flex items-center justify-center text-white font-bold text-sm shadow-sm uppercase">
-                                        {{ substr($s->nama_tamu ?? 'A', 0, 1) }}
+                                        {{-- Inisial: Jika disamarkan jadi 'P', jika tidak ambil inisial nama --}}
+                                        {{ substr($s->nama_tamu ?? 'P', 0, 1) }}
                                     </div>
                                     <span class="font-bold text-gray-700 text-sm tracking-tight">
-                                        {{ $s->nama_tamu ?? 'Anonim' }}
+                                        {{ $s->nama_tamu }}
                                     </span>
                                 </div>
                             </td>
@@ -117,66 +189,83 @@
                             <td class="px-6 py-4" x-data="{ editModalOpen: false, viewModalOpen: false }"> {{-- x-data digabung di sini --}}
                                 <div class="flex justify-center items-center gap-2">
                                     
-                                    {{-- Tombol View --}}
-                                    <button @click="viewModalOpen = true" title="Lihat Detail" 
-                                        class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-600 hover:text-white transition-all duration-300 shadow-sm flex items-center justify-center">
-                                        <i class="fas fa-eye text-xs"></i>
-                                    </button>
+                                {{-- Tombol View (Semua Role Bisa Lihat) --}}
+                                        <button @click="viewModalOpen = true" title="Lihat Detail" 
+                                            class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-600 hover:text-white transition-all duration-300 shadow-sm flex items-center justify-center">
+                                            <i class="fas fa-eye text-xs"></i>
+                                        </button>
 
-@if(session('user')['role_nama'] === 'Administrator')
-    {{-- Tombol Edit --}}
-    {{-- <button @click="editModalOpen = true" title="Edit Data" 
-        class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 border border-amber-100 hover:bg-amber-600 hover:text-white transition-all duration-300 shadow-sm flex items-center justify-center">
-        <i class="fas fa-edit text-xs"></i>
-    </button> --}}
+                                        @php
+                                            $user = session('user');
+                                            $roleId = (int)($user['role_id'] ?? 0);
+                                            $userProdiId = (int)($user['prodi_id'] ?? 0);
+                                            
+                                            // Logika Akses:
+                                            // 1. Super Admin (Role 1) & Kajur (Role 2) bisa hapus semua
+                                            // 2. Admin Prodi (Role 3) hanya bisa hapus jika prodi_id di data survey cocok
+                                            // Catatan: Pastikan di Controller Anda sudah menyertakan 'prodi_id' dalam object $s
+                                            $canDelete = ($roleId === 1 || $roleId === 2) || ($roleId === 3 && $userProdiId == ($s->prodi_id ?? 0));
+                                        @endphp
 
-    {{-- Tombol Delete --}}
-    <form id="delete-form-{{ $loop->index }}" action="{{ route('admin.survey.destroy') }}" method="POST" class="inline">
-        @csrf @method('DELETE')
-        <input type="hidden" name="id_kunjungan" value="{{ $s->id_kunjungan }}">
-        <button type="button" onclick="confirmDelete('{{ $loop->index }}', '{{ $s->nama_tamu }}')" 
-            class="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 border border-rose-100 hover:bg-rose-600 hover:text-white transition-all duration-300 shadow-sm flex items-center justify-center">
-            <i class="fas fa-trash text-xs"></i>
-        </button>
-    </form>
-@endif
-                                </div>
-
-                                {{-- --- MODAL VIEW (Detail Informasi) --- --}}
-                                <div x-show="viewModalOpen" 
-                                    class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4 text-left" 
-                                    style="display: none;" x-transition>
-                                    <div @click.away="viewModalOpen = false" class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden border border-white/20">
-                                        <div class="px-8 py-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex justify-between items-center">
-                                            <h3 class="font-black uppercase tracking-tight text-sm">Detail Penilaian</h3>
-                                            <button @click="viewModalOpen = false" class="text-white/50 hover:text-white"><i class="fas fa-times"></i></button>
-                                        </div>
-                                        <div class="p-8 space-y-6">
-                                            <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                                                <div class="w-12 h-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-xl font-black">{{ substr($s->nama_tamu ?? 'A', 0, 1) }}</div>
-                                                <div>
-                                                    <h4 class="font-black text-gray-800">{{ $s->nama_tamu }}</h4>
-                                                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{{ $s->prodi ?? 'Umum' }}</p>
-                                                </div>
-                                            </div>
-                                            <div class="grid grid-cols-5 gap-2">
-                                                @foreach(['p1', 'p2', 'p3', 'p4', 'p5'] as $index => $p)
-                                                <div class="text-center">
-                                                    <label class="text-[9px] font-black text-gray-400 uppercase">{{ $aspekLabels[$index] ?? $p }}</label>
-                                                    <div class="w-full py-2 bg-blue-50 text-blue-700 rounded-lg font-black mt-1">{{ $s->$p }}</div>
-                                                </div>
-                                                @endforeach
-                                            </div>
-                                            <div class="space-y-1">
-                                                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Kritik & Saran</label>
-                                                <div class="p-4 bg-gray-50 rounded-2xl text-sm text-gray-600 italic border border-gray-100">
-                                                    "{{ $s->kritik_saran ?? 'Tidak ada pesan.' }}"
-                                                </div>
-                                            </div>
-                                        </div>
+                                        @if($canDelete)
+                                            {{-- Tombol Delete --}}
+                                            <form id="delete-form-{{ $loop->index }}" action="{{ route('admin.survey.destroy') }}" method="POST" class="inline">
+                                                @csrf @method('DELETE')
+                                                <input type="hidden" name="id_kunjungan" value="{{ $s->id_kunjungan }}">
+                                                <button type="button" onclick="confirmDelete('{{ $loop->index }}', '{{ $s->nama_tamu }}')" 
+                                                    class="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 border border-rose-100 hover:bg-rose-600 hover:text-white transition-all duration-300 shadow-sm flex items-center justify-center">
+                                                    <i class="fas fa-trash text-xs"></i>
+                                                </button>
+                                            </form>
+                                        @endif
                                     </div>
-                                </div>
 
+{{-- --- MODAL VIEW (Detail Informasi) --- --}}
+<div x-show="viewModalOpen" 
+     class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4 text-left" 
+     style="display: none;" x-transition>
+    <div @click.away="viewModalOpen = false" class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden border border-white/20">
+        <div class="px-8 py-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex justify-between items-center">
+            <h3 class="font-black uppercase tracking-tight text-sm">Detail Penilaian</h3>
+            <button @click="viewModalOpen = false" class="text-white/50 hover:text-white"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="p-8 space-y-6">
+            <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                <div class="w-12 h-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-xl font-black">
+                    {{ substr($s->nama_tamu ?? 'P', 0, 1) }}
+                </div>
+                <div>
+                    <h4 class="font-black text-gray-800">{{ $s->nama_tamu }}</h4>
+                    
+                    {{-- Tampilkan ID Kunjungan dengan pengecekan samaran --}}
+                    <p class="text-[10px] {{ $s->id_kunjungan === 'HIDDEN' ? 'text-red-400' : 'text-gray-400' }} font-bold uppercase tracking-widest">
+                        @if($s->id_kunjungan === 'HIDDEN')
+                            <i class="fas fa-lock mr-1"></i> ID DISAMARKAN
+                        @else
+                            ID: {{ $s->id_kunjungan }}
+                        @endif
+                    </p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-5 gap-2">
+                @foreach(['p1', 'p2', 'p3', 'p4', 'p5'] as $index => $p)
+                <div class="text-center">
+                    <label class="text-[9px] font-black text-gray-400 uppercase">{{ $aspekLabels[$index] ?? $p }}</label>
+                    <div class="w-full py-2 bg-blue-50 text-blue-700 rounded-lg font-black mt-1">{{ $s->$p }}</div>
+                </div>
+                @endforeach
+            </div>
+
+            <div class="space-y-1">
+                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Kritik & Saran</label>
+                <div class="p-4 bg-gray-50 rounded-2xl text-sm text-gray-600 italic border border-gray-100">
+                    "{{ $s->kritik_saran ?? 'Tidak ada pesan.' }}"
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
                                 {{-- --- MODAL EDIT --- --}}
                                 <div x-show="editModalOpen" 
                                     class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4 text-left" 

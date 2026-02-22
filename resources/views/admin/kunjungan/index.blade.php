@@ -2,40 +2,113 @@
 
 @section('content')
 
-{{-- Header Section --}}
-{{-- Modifikasi: Teks rata kiri di mobile, tombol full width di mobile --}}
-<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-    <div>
-        <h2 class="text-xl md:text-2xl font-extrabold text-gray-800 tracking-tight">Data Kunjungan</h2>
-        <p class="text-xs md:text-sm text-gray-500 font-medium">Daftar riwayat tamu yang berkunjung (Cloud Data)</p>
+@section('content')
+
+{{-- Script SweetAlert2 --}}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{{-- === HEADER SECTION === --}}
+<div class="mb-8">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div>
+            {{-- Breadcrumb Modern --}}
+            <nav class="flex items-center gap-2 mb-3">
+                <a href="{{ route('admin.dashboard') }}" class="text-xs font-semibold text-gray-400 hover:text-indigo-600 transition-colors">Dashboard</a>
+                <i class="fas fa-chevron-right text-[10px] text-gray-300"></i>
+                <span class="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">Data Kunjungan</span>
+            </nav>
+            
+            {{-- Title --}}
+            <h1 class="text-4xl font-extrabold text-gray-900 tracking-tight">
+                Riwayat <span class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">Kunjungan</span>
+            </h1>
+            <p class="text-gray-500 font-medium mt-2 flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
+                {{ (int)session('user')['role_id'] === 1 
+                    ? 'Memantau seluruh aktivitas tamu yang masuk ke sistem.' 
+                    : 'Riwayat tamu khusus unit layanan ' . session('user')['prodi_nama'] }}
+            </p>
+        </div>
+
+        {{-- Action Buttons --}}
+        <div class="flex items-center gap-4">
+            {{-- Info Total (Statis/Counter Gaya Baru) --}}
+            <div class="bg-white px-6 py-3 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
+                <div class="flex flex-col">
+                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total Record</span>
+                    <div class="flex items-baseline gap-1">
+                        <span class="text-2xl font-black text-gray-800">{{ count($kunjungan) }}</span>
+                        <span class="text-xs font-bold text-gray-400 italic">Tamu</span>
+                    </div>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-md shadow-indigo-200">
+                    <i class="fas fa-users text-sm"></i>
+                </div>
+            </div>
+            
+            {{-- Refresh Button --}}
+            <a href="{{ route('admin.kunjungan') }}" 
+               class="w-14 h-14 bg-white text-gray-500 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center hover:text-indigo-600 hover:border-indigo-200 hover:shadow-md transition-all duration-300 group">
+                <i class="fas fa-sync-alt text-lg group-hover:rotate-180 transition-transform duration-500"></i>
+            </a>
+        </div>
     </div>
 </div>
 
-{{-- Search & Filter Section --}}
-{{-- Modifikasi: Gap lebih rapat di mobile, padding disesuaikan --}}
-<div class="bg-white p-3 md:p-4 rounded-2xl shadow-sm border border-gray-100 mb-6 flex flex-col md:flex-row gap-3">
-    <form action="{{ route('admin.kunjungan') }}" method="GET" class="relative flex-1 w-full">
-        @if(request('prodi'))
-            <input type="hidden" name="prodi" value="{{ request('prodi') }}">
+{{-- === SEARCH & FILTER SECTION === --}}
+<div class="bg-white/60 backdrop-blur-md p-3 rounded-[2rem] shadow-sm border border-gray-100 mb-8">
+    <div class="flex flex-col md:flex-row gap-3">
+        {{-- Form Pencarian --}}
+        <form action="{{ route('admin.kunjungan') }}" method="GET" class="relative flex-1 group">
+            {{-- Hidden input untuk menjaga filter prodi saat search --}}
+            @if((int)session('user')['role_id'] !== 1)
+                <input type="hidden" name="prodi" value="{{ session('user')['prodi_nama'] }}">
+            @elseif(request('prodi'))
+                <input type="hidden" name="prodi" value="{{ request('prodi') }}">
+            @endif
+
+            <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-500 transition-colors"></i>
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama pengunjung..." 
+                   class="w-full pl-12 pr-6 py-4 bg-white rounded-2xl border-none outline-none focus:ring-4 focus:ring-indigo-500/10 transition font-medium text-gray-700 placeholder:text-gray-400 shadow-sm">
+        </form>
+        
+        {{-- Filter Prodi --}}
+        @if((int)session('user')['role_id'] === 1)
+        <div class="relative min-w-[280px]">
+            <i class="fas fa-filter absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 z-10 pointer-events-none"></i>
+            <select onchange="window.location.href=this.value" 
+                    class="w-full pl-12 pr-10 py-4 bg-white rounded-2xl border-none text-gray-700 font-bold outline-none cursor-pointer hover:bg-gray-50 transition shadow-sm appearance-none focus:ring-4 focus:ring-indigo-500/10">
+                <option value="{{ route('admin.kunjungan') }}">Semua Program Studi</option>
+                @php
+                    $prodis = ['D3 Teknik Listrik', 'D3 Teknik Elektronika', 'D3 Teknik Informatika', 'D4 Teknologi Rekayasa Pembangkit Energi', 'D4 Sistem Informasi Kota Cerdas', 'Umum'];
+                @endphp
+                @foreach($prodis as $p)
+                    <option value="{{ route('admin.kunjungan', ['prodi' => $p, 'search' => request('search')]) }}" 
+                        {{ request('prodi') == $p ? 'selected' : '' }}>
+                        {{ $p }}
+                    </option>
+                @endforeach
+            </select>
+            <i class="fas fa-chevron-down absolute right-5 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none"></i>
+        </div>
+        @else
+        {{-- Badge Info Admin Prodi (Tampilan Lebih Clean) --}}
+        <div class="flex items-center px-6 py-4 bg-indigo-50/50 border border-indigo-100 rounded-2xl shadow-sm">
+            <div class="flex items-center gap-3">
+                <div class="w-2 h-2 rounded-full bg-indigo-500"></div>
+                <span class="text-xs font-bold text-indigo-700 uppercase tracking-wider">
+                    {{ session('user')['prodi_nama'] }}
+                </span>
+            </div>
+        </div>
         @endif
-        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari Nama..." 
-               class="w-full pl-10 pr-4 py-2.5 md:py-3 bg-gray-50 rounded-xl outline-none focus:ring-2 focus:ring-[#a044ff] focus:bg-white transition font-medium text-gray-700 text-sm">
-    </form>
-    
-    <div class="w-full md:w-auto">
-        <select onchange="window.location.href=this.value" class="w-full md:w-64 bg-gray-50 px-4 py-2.5 md:py-3 rounded-xl text-gray-600 font-bold outline-none cursor-pointer hover:bg-gray-100 transition text-sm focus:ring-2 focus:ring-[#a044ff]">
-            <option value="{{ route('admin.kunjungan') }}">Semua Prodi / Instansi</option>
-            @php
-                $prodis = ['D3 Teknik Listrik', 'D3 Teknik Elektronika', 'D3 Teknik Informatika', 'D4 Teknologi Rekayasa Pembangkit Energi', 'D4 Sistem Informasi Kota Cerdas', 'Umum'];
-            @endphp
-            @foreach($prodis as $p)
-                <option value="{{ route('admin.kunjungan', ['prodi' => $p, 'search' => request('search')]) }}" 
-                    {{ request('prodi') == $p ? 'selected' : '' }}>
-                    {{ $p }}
-                </option>
-            @endforeach
-        </select>
+        
+        {{-- Reset Button --}}
+        @if(request()->anyFilled(['search', 'prodi']))
+            <a href="{{ route('admin.kunjungan') }}" class="flex items-center justify-center px-6 bg-rose-50 text-rose-500 rounded-2xl hover:bg-rose-500 hover:text-white transition-all duration-300 font-bold shadow-sm">
+                <i class="fas fa-times-circle mr-2"></i> Reset
+            </a>
+        @endif
     </div>
 </div>
 
@@ -80,23 +153,26 @@
 
                     <td class="px-4 md:px-6 py-4">
                         <div class="flex justify-center items-center gap-1.5 md:gap-2">
+                            {{-- Tombol Lihat (Semua Bisa) --}}
                             <button @click="viewModalOpen = true" class="w-8 h-8 md:w-9 md:h-9 rounded-lg md:rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center">
                                 <i class="fas fa-eye text-[10px]"></i>
                             </button>
 
-                            @if(session('user')['role_nama'] === 'Administrator')
-
-                            <button @click="editModalOpen = true" class="w-8 h-8 md:w-9 md:h-9 rounded-lg md:rounded-xl bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center">
-                                <i class="fas fa-edit text-[10px]"></i>
-                            </button>
-
-                            <form id="delete-form-{{ $row->nomor_kunjungan }}" action="{{ route('admin.kunjungan.destroy', $row->nomor_kunjungan) }}" method="POST" class="inline">
-                                @csrf @method('DELETE')
-                                <button type="button" onclick="confirmDelete('{{ $row->nomor_kunjungan }}', '{{ $row->nama_lengkap }}')"
-                                        class="w-8 h-8 md:w-9 md:h-9 rounded-lg md:rounded-xl bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center">
-                                    <i class="fas fa-trash text-[10px]"></i>
+                            {{-- MODIFIKASI: Izinkan Role 1 (Super) dan Role Prodi lainnya untuk Edit & Hapus --}}
+                            @if(in_array((int)session('user')['role_id'], [1, 2, 3, 4, 5, 6]))
+                                {{-- Tombol Edit --}}
+                                <button @click="editModalOpen = true" class="w-8 h-8 md:w-9 md:h-9 rounded-lg md:rounded-xl bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center">
+                                    <i class="fas fa-edit text-[10px]"></i>
                                 </button>
-                            </form>
+
+                                {{-- Tombol Hapus --}}
+                                <form id="delete-form-{{ $row->nomor_kunjungan }}" action="{{ route('admin.kunjungan.destroy', $row->nomor_kunjungan) }}" method="POST" class="inline">
+                                    @csrf @method('DELETE')
+                                    <button type="button" onclick="confirmDelete('{{ $row->nomor_kunjungan }}', '{{ $row->nama_lengkap }}')"
+                                            class="w-8 h-8 md:w-9 md:h-9 rounded-lg md:rounded-xl bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center">
+                                        <i class="fas fa-trash text-[10px]"></i>
+                                    </button>
+                                </form>
                             @endif
                         </div>
 
@@ -129,8 +205,7 @@
                         </div>
 
                         {{-- MODAL EDIT (DINAMIS) --}}
-                       @if(session('user')['role_nama'] === 'Administrator')
-                        <div x-show="editModalOpen" class="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4 text-left" style="display: none;" x-transition>
+                        @if(in_array((int)session('user')['role_id'], [1, 2, 3, 4, 5, 6]))                        <div x-show="editModalOpen" class="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4 text-left" style="display: none;" x-transition>
                             <div @click.away="editModalOpen = false" class="bg-white rounded-[2rem] shadow-2xl w-full max-w-sm md:max-w-md overflow-hidden">
                                 <form action="{{ route('admin.kunjungan.update', $row->nomor_kunjungan) }}" method="POST">
                                     @csrf @method('PUT')
