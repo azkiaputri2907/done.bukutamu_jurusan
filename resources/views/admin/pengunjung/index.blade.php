@@ -118,6 +118,7 @@
                 <tr class="bg-gray-50/50 border-b border-gray-100 text-[10px] uppercase tracking-wider text-gray-500 font-bold">
                     <th class="px-6 py-4">Informasi Pengunjung</th>
                     <th class="px-6 py-4">Asal Instansi / Prodi</th>
+                    <th class="px-6 py-4">No. Telepon</th>
                     <th class="px-6 py-4">Terakhir Berkunjung</th>
                     <th class="px-6 py-4 text-center">Aksi</th>
                 </tr>
@@ -141,6 +142,15 @@
                         <span class="inline-flex items-center px-3 py-1 rounded-lg text-[10px] font-bold bg-gray-50 text-gray-600 border border-gray-100 uppercase">
                             {{ $p->asal_instansi ?? 'Umum' }}
                         </span>
+                    </td>
+
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-phone text-gray-300 text-[10px]"></i>
+                            <span class="text-xs font-bold text-gray-600">
+                                {{ $p->no_telpon ?? '-' }}
+                            </span>
+                        </div>
                     </td>
 
                     <td class="px-6 py-4">
@@ -193,6 +203,10 @@
                                         <div class="p-3 bg-gray-50 rounded-xl">
                                             <span class="block text-[8px] font-black text-gray-400 uppercase">Instansi</span>
                                             <span class="text-[10px] font-bold text-gray-700">{{ $p->asal_instansi ?? '-' }}</span>
+                                        </div>
+                                        <div class="p-3 bg-gray-50 rounded-xl">
+                                            <span class="block text-[8px] font-black text-gray-400 uppercase">No. Telepon</span>
+                                            <span class="text-[10px] font-bold text-gray-700">{{ $p->no_telpon ?? '-' }}</span>
                                         </div>
                                         <div class="p-3 bg-gray-50 rounded-xl">
                                             <span class="block text-[8px] font-black text-gray-400 uppercase">Terakhir Masuk</span>

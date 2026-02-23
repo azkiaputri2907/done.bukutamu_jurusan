@@ -318,6 +318,7 @@ public function pengunjung(Request $request)
                     'nama_lengkap'       => $row[1] ?? 'Tanpa Nama',
                     'asal_instansi'      => $row[2] ?? 'Umum',
                     'terakhir_kunjungan' => $terakhir,
+                    'no_telpon'         => $row[4] ?? '-',
                 ];
             });
 
