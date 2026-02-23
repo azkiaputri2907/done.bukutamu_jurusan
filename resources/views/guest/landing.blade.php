@@ -188,8 +188,9 @@
                         ['name' => 'Ir. Lauhil Mahfudz H., S.T, M.T.', 'prodi' => 'D3 Teknik Listrik', 'images' => 'kaprodi1.png'],
                         ['name' => 'Khairunnisa, S.T., M.T.', 'prodi' => 'D3 Teknik Elektronika', 'images' => 'kaprodi2.png'],
                         ['name' => 'Fuad Sholihin, S.T., M.Kom.', 'prodi' => 'D3 Teknik Informatika', 'images' => 'kaprodi3.png'],
-                        ['name' => 'Zuraidah, S.T., M.T.', 'prodi' => 'D4 Tek. Rek. Pembangkit Energi', 'images' => 'kaprodi4.png'],
-                        ['name' => 'Dr. Kun Nursyaiful Priyo Pamungkas, S.Kom., M.Kom.', 'prodi' => 'D4 Sistem Informasi Kota Cerdas', 'images' => 'kaprodi5.png']
+                        ['name' => 'Zuraidah, S.T., M.T.', 'prodi' => 'Sarjana Terapan Tek. Rek. Pembangkit Energi', 'images' => 'kaprodi4.png'],
+                        ['name' => 'Dr. Kun Nursyaiful Priyo Pamungkas, S.Kom., M.Kom.', 'prodi' => 'Sarjana TerapanSistem Informasi Kota Cerdas', 'images' => 'kaprodi5.png'],
+                        ['name' => 'Syaiful Rachman, S.T., M.T.', 'prodi' => 'Sarjana Terapan Teknolog Rekayasan Otomasi', 'images' => 'logo_poliban.png']
                     ];
                 @endphp
 
