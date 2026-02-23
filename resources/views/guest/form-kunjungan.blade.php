@@ -281,6 +281,7 @@
             else if (trimmedValue.startsWith('C03')) selectInstansi.val('D3 Teknik Informatika');
             else if (trimmedValue.startsWith('C04')) selectInstansi.val('Sarjana Terapan Teknologi Rekayasa Pembangkit Energi');
             else if (trimmedValue.startsWith('C05')) selectInstansi.val('Sarjana Terapan Sistem Informasi Kota Cerdas');
+            else if (trimmedValue.startsWith('C06')) selectInstansi.val('Sarjana Terapan Teknologi Rekayasa Otomasi');
             else if (/^\d/.test(trimmedValue)) selectInstansi.val('Lainnya / Instansi Luar');
         });
 

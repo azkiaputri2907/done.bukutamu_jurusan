@@ -68,6 +68,7 @@ public function index() {
             (object)['nama' => 'D3 Teknik Informatika', 'jenis' => 'Prodi'],
             (object)['nama' => 'Sarjana Terapan Teknologi Rekayasa Pembangkit Energi', 'jenis' => 'Prodi'],
             (object)['nama' => 'Sarjana Terapan Sistem Informasi Kota Cerdas', 'jenis' => 'Prodi'],
+            (object)['nama' => 'Sarjana Terapan Teknologi Rekayasa Otomasi', 'jenis' => 'Prodi'],
             (object)['nama' => 'Lainnya (Umum/Tamu Luar)', 'jenis' => 'Umum']
         ];
 

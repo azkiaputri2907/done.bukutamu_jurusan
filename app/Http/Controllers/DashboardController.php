@@ -45,6 +45,7 @@ class DashboardController extends Controller
             'C03' => 'D3 Teknik Informatika',
             'C04' => 'Sarjana Terapan Teknologi Rekayasa Pembangkit Energi',
             'C05' => 'Sarjana Terapan Sistem Informasi Kota Cerdas',
+            'C06' => 'Sarjana Terapan Teknologi Rekayasa Otomasi',
         ];
 
         return $prodiMapping[$prodiId] ?? $prodiId;
@@ -275,7 +276,7 @@ public function survey(Request $request)
             }
         }
 
-        $prodis = ['D3 Teknik Listrik', 'D3 Teknik Elektronika', 'D3 Teknik Informatika', 'Sarjana Terapan Teknologi Rekayasa Pembangkit Energi', 'Sarjana Terapan Sistem Informasi Kota Cerdas'];
+        $prodis = ['D3 Teknik Listrik', 'D3 Teknik Elektronika', 'D3 Teknik Informatika', 'Sarjana Terapan Teknologi Rekayasa Pembangkit Energi', 'Sarjana Terapan Sistem Informasi Kota Cerdas', 'Sarjana Terapan Teknologi Rekayasa Otomasi'];
         $aspekLabels = ['Kecepatan', 'Etika', 'Kompetensi', 'Fasilitas', 'Kualitas'];
 
         return view('admin.survey.index', compact('surveys', 'avgScores', 'prodis', 'aspekLabels'));
@@ -412,6 +413,7 @@ public function pengunjung(Request $request)
             ['nama' => 'D3 Teknik Informatika', 'jenis' => 'Prodi'],
             ['nama' => 'Sarjana Terapan Teknologi Rekayasa Pembangkit Energi', 'jenis' => 'Prodi'],
             ['nama' => 'Sarjana Terapan Sistem Informasi Kota Cerdas', 'jenis' => 'Prodi'],
+            ['nama' => 'Sarjana Terapan Teknologi Rekayasa Otomasi', 'jenis' => 'Prodi'], 
             ['nama' => 'Instansi Luar / Umum', 'jenis' => 'Instansi'],
         ])->map(fn($item) => (object) $item);
 

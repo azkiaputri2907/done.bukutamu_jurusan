@@ -39,6 +39,7 @@ class LoginController extends Controller
                 'C03' => 'D3 Teknik Informatika',
                 'C04' => 'Sarjana Terapan Teknologi Rekayasa Pembangkit Energi',
                 'C05' => 'Sarjana Terapan Sistem Informasi Kota Cerdas',
+                'C06' => 'Sarjana Terapan Teknologi Rekayasa Otomasi',
                 'all' => 'Seluruh Program Studi'
             ];
 
