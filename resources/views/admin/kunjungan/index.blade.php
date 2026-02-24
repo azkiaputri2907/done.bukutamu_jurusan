@@ -159,28 +159,30 @@
         </button>
 
         {{-- Logika Hak Akses: Sembunyikan Edit & Hapus jika User adalah Kajur (Role 2) --}}
-        @php
-            $userRole = (int)session('user')['role_id'];
-            // Izinkan jika BUKAN Kajur (Asumsi Kajur = 2)
-            // Atau definisikan siapa saja yang boleh: Super Admin (1) dan Admin Prodi (3, 4, dst)
-            $canManage = in_array($userRole, [1, 3, 4, 5, 6]); 
-        @endphp
+@php
+    $userRole = (int)session('user')['role_id'];
+    
+    // LOGIKA TERBARU:
+    // Hanya Super Admin (Role 1) yang bisa Edit dan Hapus.
+    // Role lain (Kajur, Admin Prodi, dll) hanya bisa View saja.
+    $canManage = ($userRole === 1); 
+@endphp
 
-        @if($canManage)
-            {{-- Tombol Edit --}}
-            <button @click="editModalOpen = true" class="w-8 h-8 md:w-9 md:h-9 rounded-lg md:rounded-xl bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center hover:bg-amber-600 hover:text-white transition-all">
-                <i class="fas fa-edit text-[10px]"></i>
-            </button>
-
-            {{-- Tombol Hapus --}}
-            <form id="delete-form-{{ $row->nomor_kunjungan }}" action="{{ route('admin.kunjungan.destroy', $row->nomor_kunjungan) }}" method="POST" class="inline">
-                @csrf @method('DELETE')
-                {{-- <button type="button" onclick="confirmDelete('{{ $row->nomor_kunjungan }}', '{{ $row->nama_lengkap }}')"
-                        class="w-8 h-8 md:w-9 md:h-9 rounded-lg md:rounded-xl bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center hover:bg-rose-600 hover:text-white transition-all">
-                    <i class="fas fa-trash text-[10px]"></i>
-                </button> --}}
-            </form>
-        @endif
+    {{-- Tombol Edit - Hanya terlihat oleh Role 1 --}}
+    <button @click="editModalOpen = true" class="w-8 h-8 md:w-9 md:h-9 rounded-lg md:rounded-xl bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center hover:bg-amber-600 hover:text-white transition-all">
+        <i class="fas fa-edit text-[10px]"></i>
+    </button>
+    
+@if($canManage)
+    {{-- Tombol Hapus - Hanya terlihat oleh Role 1 --}}
+    <form id="delete-form-{{ $row->nomor_kunjungan }}" action="{{ route('admin.kunjungan.destroy', $row->nomor_kunjungan) }}" method="POST" class="inline">
+        @csrf @method('DELETE')
+        <button type="button" onclick="confirmDelete('{{ $row->nomor_kunjungan }}', '{{ $row->nama_lengkap }}')"
+                class="w-8 h-8 md:w-9 md:h-9 rounded-lg md:rounded-xl bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center hover:bg-rose-600 hover:text-white transition-all">
+            <i class="fas fa-trash text-[10px]"></i>
+        </button>
+    </form>
+@endif
     </div>
 
                         {{-- MODAL VIEW DETAIL --}}

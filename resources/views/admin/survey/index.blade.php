@@ -194,12 +194,7 @@
     $roleId = (int)($user['role_id'] ?? 0);
     $userProdiId = (int)($user['prodi_id'] ?? 0);
     
-    // LOGIKA TERBARU:
-    // 1. Super Admin (Role 1) bisa hapus SEMUA data.
-    // 2. Admin Prodi (Role 3) hanya bisa hapus jika prodi_id data survey cocok dengan prodi_id user.
-    // 3. Kajur (Role 2) TIDAK disertakan di sini, sehingga otomatis tidak bisa hapus.
-    
-    $canDelete = ($roleId === 1) || ($roleId === 3 && $userProdiId == ($s->prodi_id ?? 0));
+    $canDelete = ($roleId === 1);
 @endphp
 
 {{-- Tombol View (Semua Role Bisa Lihat) --}}
