@@ -1,6 +1,28 @@
 @extends('layouts.admin')
 
 @section('content')
+
+<div id="logout-timer-modal" class="fixed inset-0 z-[9999] hidden flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate__animated animate__fadeIn">
+    <div class="bg-white rounded-[2rem] shadow-2xl max-w-sm w-full p-8 text-center border border-gray-100">
+        <div class="w-20 h-20 bg-red-50 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-inner">
+            <i class="fas fa-user-clock text-red-500 text-3xl animate-pulse"></i>
+        </div>
+        <h3 class="text-xl font-extrabold text-gray-800 mb-2">Sesi Hampir Habis!</h3>
+        <p class="text-gray-500 text-sm mb-8 leading-relaxed">
+            Sistem mendeteksi tidak ada aktivitas. Anda akan keluar otomatis dalam 
+            <span id="countdown-display" class="font-bold text-red-600 bg-red-50 px-2 py-1 rounded-lg">30</span> detik.
+        </p>
+        <div class="space-y-3">
+            <button onclick="stayLoggedIn()" class="w-full bg-gradient-to-r from-[#a044ff] to-[#3366ff] text-white font-bold py-4 rounded-2xl shadow-lg shadow-purple-200 hover:scale-[1.02] transition-all active:scale-95">
+                Lanjutkan Bekerja
+            </button>
+            <button onclick="document.getElementById('logout-form').submit()" class="w-full bg-gray-50 text-gray-400 font-semibold py-3 rounded-2xl hover:text-gray-600 transition-colors">
+                Keluar Sekarang
+            </button>
+        </div>
+    </div>
+</div>
+
 {{-- HEADER --}}
 <div class="mb-8 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
     <div class="flex items-center gap-4">
@@ -133,7 +155,58 @@
 </div>
 
 <script>
+    // Inisialisasi variabel untuk Timer
+    let idleTime = 0;
+    const warningTime = 4.5 * 60; // 4.5 menit
+    const maxIdleTime = 5 * 60;   // 5 menit
+    let countdownInterval;
+    let secondsLeft = 30;
+
     document.addEventListener('DOMContentLoaded', function() {
+
+        function resetIdleTimer() {
+            idleTime = 0;
+            hideWarning();
+            clearInterval(countdownInterval);
+        }
+
+        setInterval(function() {
+            idleTime++;
+            if (idleTime >= warningTime && idleTime < maxIdleTime) showWarning();
+            if (idleTime >= maxIdleTime) document.getElementById('logout-form').submit();
+        }, 1000);
+
+        function showWarning() {
+            const modal = document.getElementById('logout-timer-modal');
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                startCountdown();
+            }
+        }
+
+        function hideWarning() {
+            const modal = document.getElementById('logout-timer-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            secondsLeft = 30;
+        }
+
+        function startCountdown() {
+            clearInterval(countdownInterval);
+            countdownInterval = setInterval(function() {
+                secondsLeft--;
+                document.getElementById('countdown-display').innerText = secondsLeft;
+                if (secondsLeft <= 0) clearInterval(countdownInterval);
+            }, 1000);
+        }
+
+        // Global function agar bisa dipanggil dari atribut onclick HTML
+        window.stayLoggedIn = function() {
+            resetIdleTimer();
+            fetch("{{ route('admin.dashboard') }}"); // Ping server
+        };
+
         flatpickr("#datepicker", { locale: "id", dateFormat: "Y-m-d", positionElement: document.getElementById('calendar-trigger'), position: "auto" });
         
         Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
