@@ -31,7 +31,7 @@
                 </div>
             </div>
             <a href="{{ route('login') }}" class="self-end sm:self-auto bg-white/20 hover:bg-white/30 backdrop-blur-md text-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-full flex items-center gap-2 transition border border-white/30 text-xs sm:text-sm font-medium group">
-                Login Admin <span class="group-hover:translate-x-1 transition-transform">→</span>
+                Login <span class="group-hover:translate-x-1 transition-transform">→</span>
             </a>
         </nav>
 

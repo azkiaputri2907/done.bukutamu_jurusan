@@ -10,14 +10,26 @@
         <div>
             <h2 class="text-xl md:text-3xl font-extrabold text-gray-800 tracking-tight">
                 Dashboard 
-                <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#a044ff] to-[#3366ff]">
-                    {{ (int)session('user')['role_id'] === 1 ? 'Global' : session('user')['prodi_nama'] }}
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#00b09b] to-[#3366ff]">
+                    @if((int)session('user')['role_id'] === 1)
+                        Global
+                    @elseif((int)session('user')['role_id'] === 2)
+                        Ketua Jurusan
+                    @else
+                        {{ session('user')['prodi_nama'] }}
+                    @endif
                 </span>
             </h2>
             <div class="flex items-center gap-2 mt-1">
                 <span class="w-8 h-1 bg-gradient-to-r from-[#ff3366] to-[#a044ff] rounded-full"></span>
                 <p class="text-gray-500 font-medium text-[10px] md:text-xs uppercase tracking-wider">
-                    {{ (int)session('user')['role_id'] === 1 ? 'Ringkasan Seluruh Politeknik' : 'Statistik Khusus Program Studi' }}
+                    @if((int)session('user')['role_id'] === 1)
+                        Ringkasan Seluruh Politeknik
+                    @elseif((int)session('user')['role_id'] === 2)
+                        Statistik Jurusan {{ session('user')['jurusan_nama'] ?? 'Teknologi Informasi' }}
+                    @else
+                        Statistik Khusus Program Studi
+                    @endif
                 </p>
             </div>
         </div>
@@ -45,15 +57,27 @@
     </div>
 </div>
 
-{{-- INFORMASI ROLE ALERT (Hanya Admin Prodi) --}}
-@if((int)session('user')['role_id'] !== 1)
+{{-- INFORMASI ROLE ALERT (Khusus Ketua Jurusan / Role 2) --}}
+@if((int)session('user')['role_id'] === 2)
+<div class="mb-6 bg-teal-50 border border-teal-100 rounded-2xl p-4 flex items-center gap-4">
+    <div class="w-10 h-10 bg-teal-500 rounded-xl flex items-center justify-center text-white shrink-0">
+        <i class="fas fa-user-shield"></i>
+    </div>
+    <p class="text-sm text-teal-900 leading-tight">
+        <span class="font-bold">Akses Ketua Jurusan:</span> Anda memantau seluruh data kunjungan untuk seluruh program studi.
+    </p>
+</div>
+@endif
+
+{{-- INFORMASI ROLE ALERT (Admin Prodi / Selain Role 1 & 2) --}}
+@if((int)session('user')['role_id'] !== 1 && (int)session('user')['role_id'] !== 2)
 <div class="mb-6 bg-blue-50 border border-blue-100 rounded-2xl p-4 flex items-center gap-4">
     <div class="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center text-white shrink-0">
         <i class="fas fa-info-circle"></i>
     </div>
     <p class="text-sm text-blue-800 leading-tight">
         <span class="font-bold">Mode Terbatas:</span> Saat ini Anda masuk sebagai <strong>Admin {{ session('user')['prodi_nama'] }}</strong>. 
-        Data yang ditampilkan di bawah hanya mencakup kunjungan yang ditujukan ke program studi Anda.
+        Data yang ditampilkan hanya mencakup lingkup program studi Anda.
     </p>
 </div>
 @endif
