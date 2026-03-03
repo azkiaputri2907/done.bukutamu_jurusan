@@ -2,8 +2,6 @@
 
 @section('content')
 
-@section('content')
-
 {{-- Script SweetAlert2 --}}
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -112,78 +110,100 @@
     </div>
 </div>
 
+@if((int)session('user')['role_id'] === 1)
+<div id="bulk-action-container" class="hidden mb-4 animate-bounce">
+    <button onclick="confirmBulkDelete()" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-2xl flex items-center gap-2 shadow-lg shadow-red-200 transition-all font-bold text-xs uppercase tracking-widest">
+        <i class="fas fa-trash-alt"></i>
+        Hapus <span id="selected-count" class="bg-white text-red-600 px-2 py-0.5 rounded-lg ml-1">0</span> Data Terpilih
+    </button>
+</div>
+@endif
+
 {{-- Content Card --}}
 <div class="bg-white rounded-[1.5rem] md:rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
-    <div class="overflow-x-auto scrollbar-hide"> {{-- Tambahkan scrollbar-hide jika perlu --}}
-        <table class="w-full text-left border-collapse min-w-[600px]"> {{-- min-w agar tabel tidak hancur di mobile sangat kecil --}}
+    <div class="overflow-x-auto scrollbar-hide">
+        <table class="w-full text-left border-collapse min-w-[600px]">
             <thead>
                 <tr class="bg-gray-50/50 border-b border-gray-100 text-[10px] md:text-xs uppercase tracking-wider text-gray-500 font-bold">
-                    <th class="px-4 md:px-6 py-4">Nomor</th>
-                    <th class="px-4 md:px-6 py-4">Pengunjung</th>
-                    <th class="px-4 md:px-6 py-4">Keperluan</th>
-                    <th class="px-4 md:px-6 py-4 text-center">Aksi</th>
+                    {{-- Kolom Checkbox & Nomor --}}
+                    <th class="px-4 md:px-6 py-5 w-24">
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" id="select-all" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer">
+                            <span>ID</span>
+                        </div>
+                    </th>
+                    {{-- Kolom Pengunjung --}}
+                    <th class="px-4 md:px-6 py-5">Identitas Pengunjung</th>
+                    {{-- Kolom Keperluan --}}
+                    <th class="px-4 md:px-6 py-5">Tujuan & Keperluan</th>
+                    {{-- Kolom Aksi --}}
+                    <th class="px-4 md:px-6 py-5 text-center w-32">Opsi</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-50">
                 @forelse($kunjungan as $row)
                 <tr class="hover:bg-gray-50/80 transition duration-150" x-data="{ editModalOpen: false, viewModalOpen: false }">
+                    {{-- TD 1: Checkbox & ID --}}
                     <td class="px-4 md:px-6 py-4">
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-bold bg-purple-50 text-[#a044ff] border border-purple-100 whitespace-nowrap">
-                            #{{ $row->nomor_kunjungan }}
-                        </span>
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" name="selected_ids[]" value="{{ $row->nomor_kunjungan }}" 
+                                class="row-checkbox rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer">
+                            
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-bold bg-purple-50 text-[#a044ff] border border-purple-100 whitespace-nowrap">
+                                #{{ $row->nomor_kunjungan }}
+                            </span>
+                        </div>
                     </td>
 
+                    {{-- TD 2: Nama & Instansi --}}
                     <td class="px-4 md:px-6 py-4">
                         <div class="flex items-center gap-2 md:gap-3">
                             <div class="hidden sm:flex w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 items-center justify-center font-bold text-xs uppercase border border-indigo-100 shrink-0">
                                 {{ substr($row->nama_lengkap, 0, 1) }}
                             </div>
-                            <div class="max-w-[120px] md:max-w-none">
+                            <div class="max-w-[150px] md:max-w-none">
                                 <span class="block font-bold text-gray-700 text-xs md:text-sm truncate">{{ $row->nama_lengkap }}</span>
                                 <span class="text-[9px] md:text-[10px] text-gray-400 font-medium uppercase tracking-tighter truncate block">{{ $row->asal_instansi ?? 'Umum' }}</span>
                             </div>
                         </div>
                     </td>
 
+                    {{-- TD 3: Keperluan --}}
                     <td class="px-4 md:px-6 py-4 text-xs md:text-sm text-gray-500">
-                        <p class="line-clamp-1 max-w-[150px] md:max-w-xs font-medium" title="{{ $row->keperluan }}">
-                            {{ Str::limit($row->keperluan, 30) }}
-                        </p>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-quote-left text-[10px] text-gray-200 mt-1"></i>
+                            <p class="line-clamp-2 max-w-[200px] md:max-w-xs font-medium text-gray-600" title="{{ $row->keperluan }}">
+                                {{ $row->keperluan }}
+                            </p>
+                        </div>
                     </td>
 
+                    {{-- TD 4: Action --}}
                     <td class="px-4 md:px-6 py-4">
-<div class="flex justify-center items-center gap-1.5 md:gap-2">
-        {{-- Tombol Lihat (Semua Role Bisa) --}}
-        <button @click="viewModalOpen = true" class="w-8 h-8 md:w-9 md:h-9 rounded-lg md:rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all">
-            <i class="fas fa-eye text-[10px]"></i>
-        </button>
+                        <div class="flex justify-center items-center gap-1.5 md:gap-2">
+                            {{-- Button View --}}
+                            <button @click="viewModalOpen = true" class="w-8 h-8 md:w-9 md:h-9 rounded-lg md:rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all">
+                                <i class="fas fa-eye text-[10px]"></i>
+                            </button>
 
-        {{-- Logika Hak Akses: Sembunyikan Edit & Hapus jika User adalah Kajur (Role 2) --}}
-@php
-    $userRole = (int)session('user')['role_id'];
-    
-    // LOGIKA TERBARU:
-    // Hanya Super Admin (Role 1) yang bisa Edit dan Hapus.
-    // Role lain (Kajur, Admin Prodi, dll) hanya bisa View saja.
-    $canManage = ($userRole === 1); 
-@endphp
+                            @php $canManage = ((int)session('user')['role_id'] === 1); @endphp
 
-    {{-- Tombol Edit - Hanya terlihat oleh Role 1 --}}
-    <button @click="editModalOpen = true" class="w-8 h-8 md:w-9 md:h-9 rounded-lg md:rounded-xl bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center hover:bg-amber-600 hover:text-white transition-all">
-        <i class="fas fa-edit text-[10px]"></i>
-    </button>
-    
-@if($canManage)
-    {{-- Tombol Hapus - Hanya terlihat oleh Role 1 --}}
-    <form id="delete-form-{{ $row->nomor_kunjungan }}" action="{{ route('admin.kunjungan.destroy', $row->nomor_kunjungan) }}" method="POST" class="inline">
-        @csrf @method('DELETE')
-        <button type="button" onclick="confirmDelete('{{ $row->nomor_kunjungan }}', '{{ $row->nama_lengkap }}')"
-                class="w-8 h-8 md:w-9 md:h-9 rounded-lg md:rounded-xl bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center hover:bg-rose-600 hover:text-white transition-all">
-            <i class="fas fa-trash text-[10px]"></i>
-        </button>
-    </form>
-@endif
-    </div>
+                            {{-- Button Edit --}}
+                            <button @click="editModalOpen = true" class="w-8 h-8 md:w-9 md:h-9 rounded-lg md:rounded-xl bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center hover:bg-amber-600 hover:text-white transition-all">
+                                <i class="fas fa-edit text-[10px]"></i>
+                            </button>
+                            
+                            {{-- Button Delete --}}
+                            @if($canManage)
+                            <form id="delete-form-{{ $row->nomor_kunjungan }}" action="{{ route('admin.kunjungan.destroy', $row->nomor_kunjungan) }}" method="POST" class="inline">
+                                @csrf @method('DELETE')
+                                <button type="button" onclick="confirmDelete('{{ $row->nomor_kunjungan }}', '{{ $row->nama_lengkap }}')"
+                                        class="w-8 h-8 md:w-9 md:h-9 rounded-lg md:rounded-xl bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center hover:bg-rose-600 hover:text-white transition-all">
+                                    <i class="fas fa-trash text-[10px]"></i>
+                                </button>
+                            </form>
+                            @endif
+                        </div>
 
                         {{-- MODAL VIEW DETAIL --}}
                         {{-- Modifikasi: max-w-sm di mobile, rounded lebih kecil sedikit --}}
@@ -304,6 +324,71 @@
         }).then((result) => {
             if (result.isConfirmed) document.getElementById('delete-form-' + id).submit();
         })
+    }
+    const selectAll = document.getElementById('select-all');
+    const checkboxes = document.querySelectorAll('.row-checkbox');
+    const bulkContainer = document.getElementById('bulk-action-container');
+    const selectedCount = document.getElementById('selected-count');
+
+    selectAll.addEventListener('change', function() {
+        checkboxes.forEach(cb => cb.checked = this.checked);
+        toggleBulkButton();
+    });
+
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', toggleBulkButton);
+    });
+
+    function toggleBulkButton() {
+        const checkedCount = document.querySelectorAll('.row-checkbox:checked').length;
+        if (selectedCount) selectedCount.innerText = checkedCount;
+        
+        if (checkedCount > 0) {
+            bulkContainer.classList.remove('hidden');
+        } else {
+            bulkContainer.classList.add('hidden');
+        }
+    }
+
+    function confirmBulkDelete() {
+        const selectedIds = Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => cb.value);
+
+        Swal.fire({
+            title: 'Hapus Massal?',
+            text: `Anda akan menghapus ${selectedIds.length} data secara permanen!`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e11d48',
+            confirmButtonText: 'Ya, Hapus Semua',
+            cancelButtonText: 'Batal',
+            customClass: {
+                popup: 'rounded-[1.5rem]',
+                confirmButton: 'rounded-xl px-5 py-2.5 text-xs font-bold uppercase',
+                cancelButton: 'rounded-xl px-5 py-2.5 text-xs font-bold uppercase'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch("{{ route('admin.kunjungan.bulkDelete') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ ids: selectedIds })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        Swal.fire('Berhasil!', data.message, 'success').then(() => location.reload());
+                    } else {
+                        Swal.fire('Gagal!', data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    Swal.fire('Error!', 'Terjadi kesalahan sistem.', 'error');
+                });
+            }
+        });
     }
 </script>
 @endsection

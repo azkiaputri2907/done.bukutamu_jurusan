@@ -44,7 +44,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/kunjungan', 'storeKunjungan')->name('kunjungan.store');
         Route::put('/kunjungan/{id}', 'updateKunjungan')->name('kunjungan.update');
         Route::delete('/kunjungan/{id}', 'destroyKunjungan')->name('kunjungan.destroy');
-
+        Route::post('/kunjungan/bulk-delete', 'bulkDestroyKunjungan')->name('kunjungan.bulkDelete');
         // Survey
         Route::get('/survey', 'survey')->name('survey'); 
         Route::put('/survey/update', 'updateSurvey')->name('survey.update');

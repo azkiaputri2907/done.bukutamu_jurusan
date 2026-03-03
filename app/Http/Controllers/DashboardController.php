@@ -721,5 +721,28 @@ public function checkNotification()
     }
     return response()->json(['status' => 'empty']);
 }
+public function bulkDestroyKunjungan(Request $request)
+{
+    $ids = $request->ids; // Array ID yang dikirim dari frontend
+
+    if (empty($ids)) {
+        return response()->json(['status' => 'error', 'message' => 'Tidak ada data yang dipilih'], 400);
+    }
+
+    try {
+        $response = Http::withoutVerifying()->post(env('GOOGLE_SCRIPT_URL'), [
+            'action' => 'bulkDeleteKunjungan',
+            'ids'    => $ids,
+        ]);
+
+        if ($response->successful() && ($response->json()['status'] ?? '') === 'success') {
+            return response()->json(['status' => 'success', 'message' => count($ids) . ' data berhasil dihapus.']);
+        }
+
+        return response()->json(['status' => 'error', 'message' => 'Gagal menghapus data di Cloud.'], 500);
+    } catch (\Exception $e) {
+        return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
+    }
+}
 
 }
