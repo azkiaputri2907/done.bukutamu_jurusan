@@ -83,7 +83,9 @@
                                         class="w-full bg-gray-50 border-none rounded-2xl pl-12 pr-4 py-4 text-sm font-bold text-gray-700 outline-none focus:ring-4 focus:ring-indigo-500/10 focus:bg-white transition shadow-sm appearance-none">
                                     <option value="kunjungan">Data Kunjungan Tamu</option>
                                     <option value="pengunjung">Data Master Pengunjung</option>
+                                    @if($isPowerUser)
                                     <option value="survey">Data Survey Kepuasan</option>
+                                    @endif
                                 </select>
                                 <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none text-xs"></i>
                             </div>
