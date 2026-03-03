@@ -30,6 +30,15 @@
 
         {{-- Action Buttons --}}
         <div class="flex items-center gap-4">
+        {{-- Tombol Isi Buku Tamu (Buka di Tab Baru) --}}
+            @if((int)session('user')['role_id'] === 1)
+            <a href="{{ route('guest.form') }}" 
+            target="_blank" 
+            class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-blue-600 text-white rounded-2xl shadow-lg shadow-emerald-200 hover:shadow-emerald-300 hover:-translate-y-0.5 transition-all duration-300 group">
+                <i class="fas fa-external-link-alt text-xs group-hover:scale-110 transition-transform"></i>
+                <span class="text-xs font-bold uppercase tracking-widest">Isi Buku Tamu</span>
+            </a>
+            @endif
             {{-- Info Total (Statis/Counter Gaya Baru) --}}
             <div class="bg-white px-6 py-3 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
                 <div class="flex flex-col">
